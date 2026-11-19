@@ -1,6 +1,7 @@
 """Llamadas a Gemini (clave gratuita de Google AI Studio). Devuelve siempre JSON."""
 import json
 import re
+import time
 
 from . import util
 
@@ -92,7 +93,11 @@ def gemini(sistema, usuario, temperatura=0.9):
     clave = util.secreto("GEMINI_API_KEY")
     if not clave:
         raise RuntimeError("Falta el secreto GEMINI_API_KEY (Settings → Secrets and variables → Actions)")
-    preferidos = ([_modelo_ok] if _modelo_ok else []) + util.config().get("gemini_modelos", ["gemini-flash-latest"])
+    # primero el que anduvo en esta ejecución; si no, el último que anduvo en otra (queda en data/estado.json)
+    guardado = (util.leer_json("data/estado.json", {}) or {}).get("gemini_modelo_ok", "")
+    preferidos = ([_modelo_ok] if _modelo_ok else []) + ([guardado] if guardado else []) + \
+        util.config().get("gemini_modelos", ["gemini-flash-latest"])
+    espera_max = int(util.config().get("gemini_timeout", 60))
     probados, errores, descubiertos, bloqueos = set(), [], False, 0
     cola = list(preferidos)
     while cola or not descubiertos:
@@ -109,12 +114,15 @@ def gemini(sistema, usuario, temperatura=0.9):
         texto, fin = "", ""
         # Si el modelo no acepta algún ajuste (pensamiento o filtros), pruebo sin él.
         for ajustes in ((True, True), (False, True), (False, False)):
+            inicio = time.time()
             try:
+                # un solo intento por modelo: si no contesta a tiempo, se pasa enseguida al siguiente
                 r = util.pedir("POST", API.format(modelo=modelo), headers={"x-goog-api-key": clave},
                                json=_cuerpo(sistema, usuario, temperatura, modelo, *ajustes),
-                               intentos=1 if descubiertos else 2, espera=15, timeout=150)
+                               intentos=1, espera=10, timeout=espera_max)
             except Exception as e:  # noqa  (Google no contestó a tiempo: paso al modelo siguiente)
                 r = None
+                util.log(f"Gemini: {modelo} no respondió en {time.time() - inicio:.0f} s, pruebo el siguiente")
                 errores.append(f"{modelo}: no respondió ({type(e).__name__})")
                 break
             if r is not None and r.status_code == 400 and any(x in _mensaje(r).lower() for x in ("think", "safety")):
@@ -123,6 +131,7 @@ def gemini(sistema, usuario, temperatura=0.9):
         if r is None:
             continue
         if r.status_code != 200:
+            util.log(f"Gemini: {modelo} contestó {r.status_code}: {_mensaje(r)[:120]}")
             errores.append(f"{modelo}: {getattr(r, 'status_code', '?')} {_mensaje(r)}")
             continue
         datos = r.json()
@@ -136,6 +145,13 @@ def gemini(sistema, usuario, temperatura=0.9):
             resultado = _json_de(texto)
             if _modelo_ok != modelo:
                 util.log("Modelo de Gemini usado:", modelo)
+                try:
+                    estado = util.leer_json("data/estado.json", {}) or {}
+                    if estado.get("gemini_modelo_ok") != modelo:
+                        estado["gemini_modelo_ok"] = modelo
+                        util.guardar_json("data/estado.json", estado)
+                except Exception:  # noqa
+                    pass
             _modelo_ok = modelo
             return resultado
         except Exception as e:  # noqa

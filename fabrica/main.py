@@ -464,11 +464,18 @@ def probar():
     cfg = util.config()
     filas = []
 
-    def fila(nombre, fn):
+    def fila(nombre, fn, limite=90):
+        import concurrent.futures as cf
+        util.log("Probando", nombre, "…")
+        ex = cf.ThreadPoolExecutor(max_workers=1)
         try:
-            ok, detalle = fn()
+            ok, detalle = ex.submit(fn).result(timeout=limite)
+        except cf.TimeoutError:
+            ok, detalle = False, f"no respondió en {limite} s"
         except Exception as e:  # noqa
             ok, detalle = False, f"{type(e).__name__}: {util.ocultar(e)[:200]}"
+        finally:
+            ex.shutdown(wait=False, cancel_futures=True)
         filas.append((nombre, ok, detalle))
         util.log(nombre, "OK" if ok else "FALLA", "·", detalle)
 
@@ -542,7 +549,7 @@ def probar():
             return False, pub._meta_error(r)
         return True, "cuenta @" + r.json().get("username", "?") + " (publica por la página de Facebook)"
 
-    fila("Gemini", gemini)
+    fila("Gemini", gemini, limite=240)
     fila("Twitch", twitch)
     fila("Mail", mail)
     fila("YouTube", youtube)
