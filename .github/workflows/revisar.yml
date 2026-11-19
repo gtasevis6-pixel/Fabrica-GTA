@@ -1,0 +1,54 @@
+name: Revisar video
+
+# Para el video que te llegó por mail y está esperando: publicarlo ya, no publicarlo,
+# o pedir otro clip (u otro tema). Si no usás este formulario, sale solo a los 5 minutos.
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: "¿Qué hacemos con el video que está esperando?"
+        type: choice
+        options: ["Publicar ya", "No publicar", "Otro clip / otro tema"]
+        default: "Publicar ya"
+      turno:
+        description: "¿Cuál? (normalmente el que está esperando)"
+        type: choice
+        options: ["El que está esperando", "1", "2", "3", "4", "5"]
+        default: "El que está esperando"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: revisar
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      ACCION: ${{ inputs.accion }}
+      TURNO_PEDIDO: ${{ inputs.turno }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests
+      - name: Anotar tu pedido
+        run: python -m fabrica.main revisar
+      - name: Guardarlo para que lo vea la fábrica
+        run: |
+          git config user.name "fabrica-gta-bot"
+          git config user.email "fabrica-gta-bot@users.noreply.github.com"
+          git add data/pedidos.json
+          git commit -m "Pedido de revisión [skip ci]"
+          for i in 1 2 3 4 5; do
+            git push && exit 0
+            git pull --rebase -q && continue
+            sleep 5
+          done
+          exit 1
