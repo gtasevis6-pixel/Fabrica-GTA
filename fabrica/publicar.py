@@ -159,8 +159,22 @@ def _reel_con_musica(video_url, cover_url, caption, im):
     audio = {"audio_id": tema_id,
              "audio_volume": max(0, min(100, int(im.get("volumen_musica", 15)))),
              "video_volume": max(0, min(100, int(im.get("volumen_video", 100))))}
+    media_id = _reel_por_facebook(video_url, cover_url, caption, audio)
+    _anotar_tema(tema_id, nombre)
+    util.log("Reel publicado con música de Instagram:", nombre)
+    return media_id
+
+
+def _reel_por_facebook(video_url, cover_url, caption, audio=None):
+    """Publica el Reel por graph.facebook.com con el token de la página (Instagram vinculado a la página).
+    Necesita IG_FB_ID y FB_PAGE_TOKEN (o IG_FB_TOKEN) con instagram_basic + instagram_content_publish."""
+    token, ig_id = _ig_fb()
+    if not token or not ig_id:
+        raise RuntimeError("faltan IG_FB_ID y FB_PAGE_TOKEN")
     datos = {"media_type": "REELS", "video_url": video_url, "caption": caption, "share_to_feed": "true",
-             "audio_configuration": json.dumps(audio), "access_token": token}
+             "access_token": token}
+    if audio:
+        datos["audio_configuration"] = json.dumps(audio)
     if cover_url:
         datos["cover_url"] = cover_url
     r = util.pedir("POST", IG_FB + f"{ig_id}/media", data=datos)
@@ -174,13 +188,11 @@ def _reel_con_musica(video_url, cover_url, caption, im):
         if st == "FINISHED":
             break
         if st == "ERROR" or time.time() > fin:
-            raise RuntimeError("Instagram no pudo procesar el Reel con música: " + str(r.json() if r is not None else ""))
+            raise RuntimeError("Instagram no pudo procesar el Reel: " + str(r.json() if r is not None else ""))
         time.sleep(10)
     r = util.pedir("POST", IG_FB + f"{ig_id}/media_publish", data={"creation_id": cid, "access_token": token})
     if r is None or r.status_code != 200:
         raise RuntimeError(_meta_error(r))
-    _anotar_tema(tema_id, nombre)
-    util.log("Reel publicado con música de Instagram:", nombre)
     return r.json()["id"]
 
 
@@ -196,9 +208,21 @@ def instagram_reel(video_url, cover_url, caption):
         except Exception as e:  # noqa
             util.log("Música de Instagram: no se pudo, sale sin música:", util.ocultar(e))
             util.avisar("Instagram", "Salió sin música de Instagram: " + util.ocultar(e)[:200])
+    if not util.secreto("IG_TOKEN") and all(_ig_fb()):
+        # sin token propio de Instagram: sale por la página de Facebook vinculada (mismo token que Facebook)
+        ultimo = ""
+        for n in range(1, 3):
+            try:
+                return _reel_por_facebook(video_url, cover_url if n == 1 else "", caption)
+            except Exception as e:  # noqa
+                ultimo = util.ocultar(e)
+                util.log(f"Instagram (vía Facebook) falló, intento {n} de 2:", ultimo)
+                if n < 2:
+                    time.sleep(IG_ESPERA_REINTENTO)
+        raise RuntimeError("Instagram (vía página de Facebook): " + ultimo)
     token, err = ig_token()
     if err:
-        raise RuntimeError(err)
+        raise RuntimeError(err + " (o cargá IG_FB_ID y FB_PAGE_TOKEN para publicar por la página de Facebook)")
     ultimo = ""
     for n, con_portada in enumerate(IG_REINTENTOS, 1):
         datos = {"media_type": "REELS", "video_url": video_url, "caption": caption,
@@ -225,9 +249,21 @@ def instagram_reel(video_url, cover_url, caption):
 
 
 def instagram_carrusel(urls, caption):
+    if not util.secreto("IG_TOKEN") and all(_ig_fb()):
+        # sin token propio de Instagram: sale por la página de Facebook vinculada (mismo token que Facebook)
+        ultimo = ""
+        for n in range(1, 3):
+            try:
+                return _reel_por_facebook(video_url, cover_url if n == 1 else "", caption)
+            except Exception as e:  # noqa
+                ultimo = util.ocultar(e)
+                util.log(f"Instagram (vía Facebook) falló, intento {n} de 2:", ultimo)
+                if n < 2:
+                    time.sleep(IG_ESPERA_REINTENTO)
+        raise RuntimeError("Instagram (vía página de Facebook): " + ultimo)
     token, err = ig_token()
     if err:
-        raise RuntimeError(err)
+        raise RuntimeError(err + " (o cargá IG_FB_ID y FB_PAGE_TOKEN para publicar por la página de Facebook)")
     ultimo = ""
     for n in (1, 2):  # si Instagram falla al procesarlo, se arma de nuevo una vez más
         hijos = []
