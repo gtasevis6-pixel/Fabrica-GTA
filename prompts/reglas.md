@@ -11,7 +11,8 @@ Nunca:
   duplicar plata o romper el juego online.
 - Presentar un rumor como hecho. Si el material solo tiene un rumor, descartalo.
 - Spoilers de la historia en el gancho, el título o la portada (finales, muertes, giros). Si el clip es una
-  escena de historia, en el texto va "SPOILER" al principio.
+  escena de historia, en el texto va "SPOILER" al principio. En las guías, el NOMBRE de la misión sí puede
+  ir en el título (es lo que la gente busca); lo que pasa en la historia, no.
 - Dar a entender que somos Rockstar o una cuenta oficial. Nunca "oficial" para hablar de nosotros.
 - Burlarse del streamer del clip, ni de nadie por su físico, origen o forma de hablar.
 - Clickbait que el video no cumple. El gancho tiene que ser verdad.

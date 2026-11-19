@@ -125,9 +125,20 @@ def kick_clips(cfg):
 
 
 # ------------------------------------------------------------------ elegir candidatos
-def candidatos(cfg, usados, horas=None):
-    """Junta Twitch y Kick, saca los ya usados y los de canales bloqueados, y ordena:
-    primero los streamers con campaña de clipping activa, después idioma preferido y vistas."""
+def _otros_idiomas_hoy():
+    """Cuántos clips en otro idioma ya salieron hoy (para no pasarse del tope diario)."""
+    hoy = util.ahora().strftime("%Y-%m-%d")
+    h = util.leer_json("data/historial.json", []) or []
+    return sum(1 for x in h if x.get("fecha") == hoy and x.get("tipo") == "clip" and x.get("otro_idioma"))
+
+
+def candidatos(cfg, usados, horas=None, a_revisar=None):
+    """Junta Twitch y Kick, saca los ya usados y los de canales bloqueados, y arma el «top viral del día»:
+    - en español: los más vistos de cada plataforma (config clips.top_espanol, por defecto 6 de Twitch y 2 de Kick)
+    - en otros idiomas: los más vistos (clips.top_otros_idiomas, por defecto 2), con tope por día
+      (clips.otros_idiomas_por_dia, por defecto 1)
+    Devuelve la lista ordenada: la IA mira los primeros `a_revisar` (siempre con un viral en otro idioma
+    compitiendo, si hay y no se llegó al tope) y elige uno."""
     c = cfg.get("clips") or {}
     idiomas = [x.lower() for x in c.get("idiomas", ["es"])]
     otros = bool(c.get("aceptar_otros_idiomas", True))
@@ -135,27 +146,62 @@ def candidatos(cfg, usados, horas=None):
     campana = {x.lower() for x in c.get("streamers_con_campana", [])}
     dmin, dmax = float(c.get("duracion_min", 8)), float(c.get("duracion_max", 60))
     vmin = int(c.get("vistas_minimas", 50))
+    top_es = c.get("top_espanol") or {"twitch": 6, "kick": 2}
+    top_otros = int(c.get("top_otros_idiomas", 2))
+    tope_dia = int(c.get("otros_idiomas_por_dia", 1))
+    a_revisar = int(a_revisar or c.get("candidatos_a_revisar", 5))
     todos = []
     for fn in (twitch_clips, kick_clips):
         try:
             todos += fn(cfg) if fn is kick_clips else fn(cfg, horas)
         except Exception as e:  # noqa
             util.avisar(f"Fuente {fn.__name__}", util.ocultar(e))
-    vistos, out = set(), []
+    vistos, validos = set(), []
     for x in todos:
         if x["id"] in usados or x["id"] in vistos or x["canal"].lower() in bloqueados:
             continue
         if not (dmin <= x["duracion"] <= dmax) or x["vistas"] < vmin:
             continue
-        if x["idioma"] not in idiomas and not otros:
-            continue
         vistos.add(x["id"])
-        out.append(x)
+        validos.append(x)
 
-    def orden(x):
-        return (x["canal"].lower() not in campana, x["idioma"] not in idiomas, -x["vistas"])
-    out.sort(key=orden)
-    return out
+    def es_preferido(x):
+        return any(x["idioma"].startswith(i) for i in idiomas if x["idioma"])
+
+    def orden(x):  # streamers con campaña primero, después vistas
+        return (x["canal"].lower() not in campana, -x["vistas"])
+
+    validos.sort(key=orden)
+    espanol, resto_es = [], []
+    for plat in ("twitch", "kick"):
+        de_plat = [x for x in validos if es_preferido(x) and x["plataforma"] == plat]
+        cupo = int(top_es.get(plat, 0))
+        espanol += de_plat[:cupo]
+        resto_es += de_plat[cupo:]
+    # si una plataforma no llenó su cupo, se completa con los siguientes más vistos en español
+    faltan = sum(int(v) for v in top_es.values()) - len(espanol)
+    espanol = sorted(espanol + sorted(resto_es, key=orden)[:max(0, faltan)], key=orden)
+    extra_es = [x for x in sorted(resto_es, key=orden) if x not in espanol]
+    otros_lista = [x for x in validos if not es_preferido(x)][:top_otros] if otros else []
+    if otros_lista and _otros_idiomas_hoy() >= tope_dia:
+        util.log(f"Ya salió {tope_dia} clip en otro idioma hoy: van solo en español (si hay)")
+        otros_lista = []
+    # la tanda que mira la IA: los mejores en español y, en el último lugar, el mejor viral en otro idioma
+    lugar = max(0, a_revisar - (1 if otros_lista else 0))
+    tanda = espanol[:lugar]
+    # el mejor de cada plataforma entra siempre en la tanda (Kick tiene menos vistas que Twitch)
+    for plat in ("twitch", "kick"):
+        mejor = next((x for x in espanol if x["plataforma"] == plat), None)
+        if mejor and mejor not in tanda and tanda:
+            tanda[-1] = mejor
+    resto = [x for x in espanol if x not in tanda]
+    lista = tanda + otros_lista[:1] + resto + otros_lista[1:] + extra_es
+    if not espanol and not otros_lista and otros:
+        # día flojo en español y ya se usó el cupo: antes que no publicar, se usa lo más visto
+        lista = [x for x in validos if not es_preferido(x)][:top_otros]
+    util.log(f"Top del día: {len(espanol)} en español, {len(otros_lista)} en otros idiomas "
+             f"(de {len(validos)} clips válidos)")
+    return lista
 
 
 # ------------------------------------------------------------------ bajar un clip
@@ -211,6 +257,26 @@ def bajar(clip, destino):
     raise RuntimeError(f"No pude bajar {clip['url']}: {error}")
 
 
+# ------------------------------------------------------------------ clips de una misión
+def _palabras(t):
+    import unicodedata
+    t = unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode().lower()
+    return {w for w in re.findall(r"[a-z0-9]+", t) if len(w) > 3 and w not in {"mision", "mission", "como", "pasar"}}
+
+
+def clips_de_mision(lista, mision):
+    """De la lista de clips, los que en el título nombran la misión (al menos 2/3 de sus palabras)."""
+    clave = _palabras(mision)
+    if not clave:
+        return []
+    out = []
+    for x in lista:
+        comunes = clave & _palabras(x.get("titulo", ""))
+        if len(comunes) >= max(1, round(len(clave) * 2 / 3)):
+            out.append(x)
+    return out
+
+
 # ------------------------------------------------------------------ noticias
 def _rss(url, fuente, limite=15):
     try:
@@ -247,14 +313,30 @@ def _rss(url, fuente, limite=15):
     return out
 
 
+BUSQUEDAS_MISIONES = {
+    "es": ["GTA 6 misión cómo pasar", "GTA 6 guía misión", "GTA 6 cómo superar", "GTA 6 guía para empezar"],
+    "en": ["GTA 6 mission walkthrough", "GTA 6 how to beat", "GTA 6 mission guide", "GTA 6 beginner guide"],
+}
+
+
 def noticias(cfg, modo="novedad", horas=48):
-    """Noticias recientes de GTA 6. modo «guia» busca guías, trucos y secretos en vez de novedades."""
+    """Noticias recientes de GTA 6. modo «guia» busca guías de misiones, trucos y secretos (en español y en
+    inglés, de los últimos 7 días) en vez de novedades."""
     n = cfg.get("noticias") or {}
-    busquedas = n.get("busquedas_guia" if modo == "guia" else "busquedas", ["GTA 6"])
+    if modo == "guia":
+        horas = max(horas, 24 * 7)
+        pedidos = [(q, "es") for q in n.get("busquedas_guia", [])]
+        mis = n.get("busquedas_misiones") or BUSQUEDAS_MISIONES
+        pedidos += [(q, "es") for q in mis.get("es", [])] + [(q, "en") for q in mis.get("en", [])]
+        dias = "7d"
+    else:
+        pedidos = [(q, "es") for q in n.get("busquedas", ["GTA 6"])]
+        dias = "3d"
     items = []
-    for q in busquedas:
-        url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:3d&hl=es-419&gl=AR&ceid=AR:es-419"
-        items += _rss(url, "Google Noticias")
+    for q, idioma in pedidos:
+        loc = "hl=es-419&gl=AR&ceid=AR:es-419" if idioma == "es" else "hl=en-US&gl=US&ceid=US:en"
+        url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:{dias}&{loc}"
+        items += _rss(url, "Google Noticias" + ("" if idioma == "es" else " (inglés)"))
     for f in n.get("rss", []):
         items += _rss(f["url"], f["nombre"])
     limite = util.datetime.now(util.ZoneInfo("UTC")) - timedelta(hours=horas)

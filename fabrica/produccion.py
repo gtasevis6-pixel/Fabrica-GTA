@@ -202,6 +202,7 @@ def _render_y_revisar(cfg, carpeta, x, ed):
         "portada": str(carpeta / "portada.jpg"), "clip": {k: x[k] for k in ("id", "url", "canal", "canal_url",
                                                                             "plataforma", "vistas", "titulo")},
         "por_que": ed.get("por_que", ""), "revisor": r.get("fallas") or [],
+        "otro_idioma": not es_espanol,
         "guion": " ".join(p[2] for p in x["palabras"])[:1500]}
 
 
@@ -211,7 +212,8 @@ def producir_novedad(cfg, carpeta, usados, titulos_previos, modo="novedad"):
     carpeta = Path(carpeta)
     carpeta.mkdir(parents=True, exist_ok=True)
     guion = None
-    for m in ([modo, "guia"] if modo == "novedad" else [modo, "novedad"]):
+    # la guía, si no hay material, no pasa a novedad: el turno sale con un clip viral (lo decide main)
+    for m in ([modo, "guia"] if modo == "novedad" else [modo]):
         material = [n for n in fuentes.noticias(cfg, m) if n["link"] not in usados]
         if not material:
             continue
@@ -231,9 +233,17 @@ def producir_novedad(cfg, carpeta, usados, titulos_previos, modo="novedad"):
     dur = edicion.duracion(wav) + 0.5
     # fondo: gameplay de clips del día, sin su audio
     fondos, canales = [], []
+    mision = str(guion.get("mision") or "").strip()
+    ilustrativo = False
     try:
-        for x in fuentes.candidatos({**cfg, "clips": {**(cfg.get("clips") or {}), "aceptar_otros_idiomas": True}},
-                                    set())[:8]:
+        lista = fuentes.candidatos({**cfg, "clips": {**(cfg.get("clips") or {}), "aceptar_otros_idiomas": True,
+                                                     "otros_idiomas_por_dia": 99}}, set())
+        if mision:
+            de_mision = fuentes.clips_de_mision(lista, mision)
+            util.log(f"Clips que nombran la misión «{mision}»:", len(de_mision))
+            ilustrativo = not de_mision
+            lista = de_mision + [x for x in lista if x not in de_mision]
+        for x in lista[:8]:
             try:
                 fondos.append(fuentes.bajar(x, carpeta / "fondos" / f"{len(fondos)}.mp4"))
                 canales.append(x)
@@ -245,6 +255,8 @@ def producir_novedad(cfg, carpeta, usados, titulos_previos, modo="novedad"):
         util.avisar("Fondo de gameplay", util.ocultar(e)[:200])
     fondo = edicion.fondo_de_clips(fondos, carpeta / "fondo.mp4", dur)
     credito = "GAMEPLAY: " + " · ".join(dict.fromkeys(x["canal"] for x in canales[:3])) if canales else ""
+    if ilustrativo and credito:
+        credito = "GAMEPLAY ILUSTRATIVO: " + " · ".join(dict.fromkeys(x["canal"] for x in canales[:3]))
     musica = util.RAIZ / cfg.get("musica", "assets/music.mp3")
     video = carpeta / "video.mp4"
     pal = [[p[0], p[1], p[2]] for p in palabras]
@@ -279,4 +291,4 @@ def producir_novedad(cfg, carpeta, usados, titulos_previos, modo="novedad"):
         "hashtags": guion.get("hashtags") or ["#GTA6"], "video": str(video), "portada": str(carpeta / "portada.jpg"),
         "links": links, "noticia": guion.get("noticia", ""), "voz": motor, "revisor": r.get("fallas") or [],
         "fondos": [x["id"] for x in canales], "guion": " ".join(escenas),
-        "nota_blog": str(guion.get("nota_blog") or "").strip(), "fuente_nombre": fuente}
+        "nota_blog": str(guion.get("nota_blog") or "").strip(), "fuente_nombre": fuente, "mision": mision}

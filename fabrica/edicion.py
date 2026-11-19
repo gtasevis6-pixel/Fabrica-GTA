@@ -174,9 +174,10 @@ def _filtro_vertical(ancho, alto, zoom, dur, ass, con_barra=True, entrada="0:v")
     w, h, y = caja_video(ancho, alto, zoom)
     recorte = f",crop={W}:{h}" if w > W else ""   # con zoom el video se pasa de ancho: recorto los costados
     partes = [
-        f"[{entrada}]split=2[v_fondo][v_frente]",
-        f"[v_fondo]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},"
-        f"boxblur=24:2,eq=brightness=-0.18:saturation=1.15[fondo]",
+        f"[{entrada}]fps={FPS},split=2[v_fondo][v_frente]",
+        # el fondo se desenfoca en chico y después se agranda: se ve igual y tarda un tercio
+        f"[v_fondo]scale={W // 4}:{H // 4}:force_original_aspect_ratio=increase,crop={W // 4}:{H // 4},"
+        f"boxblur=6:2,eq=brightness=-0.18:saturation=1.15,scale={W}:{H}[fondo]",
         f"[v_frente]scale={w}:{h}{recorte},setsar=1[frente]",
         f"[fondo][frente]overlay=(W-w)/2:{y}[base]",
         f"[base]subtitles='{_esc(ass)}':fontsdir='{_esc(FONTS)}'[con_texto]",

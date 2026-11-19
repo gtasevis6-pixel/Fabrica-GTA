@@ -9,7 +9,9 @@ Revisá:
 1. Que se lea todo: el gancho y los subtítulos no se cortan, no tapan algo importante y no tienen errores
    de ortografía.
 2. Que el gancho y el título sean verdad según lo que se ve y se dice (nada de clickbait que no cumple).
-3. Que no haya spoilers de la historia en el gancho, el título ni la portada.
+3. Que no haya spoilers de la historia en el gancho, el título ni la portada. En las guías, el nombre de
+   la misión en el título está permitido; lo que pasa en la historia, no.
+   Si en una guía el crédito dice "GAMEPLAY ILUSTRATIVO", es correcto que las imágenes no sean de esa misión.
 4. Que no haya desnudos, violencia muy explícita, filtraciones, exploits ni nada que rompa las reglas.
 5. Que no parezca una cuenta oficial de Rockstar.
 6. En las novedades: que cada dato del texto esté en el MATERIAL. Si hay un dato que no está, es falla.

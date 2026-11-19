@@ -9,6 +9,12 @@ Tu trabajo:
    Descartá los que no se entienden sin contexto, los que son mayormente charla sin juego, los que muestran
    desnudos o violencia muy explícita, los que son escenas de historia con spoilers y los que muestran
    exploits, trampas o cosas filtradas.
+   Lo que más pega en esta página, en este orden: bugs o físicas locas que dan risa, momentos muy
+   graciosos, misiones o persecuciones épicas, descubrimientos y trucos útiles del juego (dónde hay
+   algo, una mecánica escondida) y reacciones enormes. Un "bug gracioso" está bien; un exploit para
+   ganar plata, duplicar cosas o romper el online no va nunca.
+   Nuestro público habla español: si dos clips están parejos, elegí el que está en español. Un clip en
+   otro idioma solo le gana a uno en español si es claramente más viral y se entiende sin escuchar.
 2. Si ninguno sirve, devolvé "elegido": -1.
 3. Proponé el recorte: segundo de inicio y de fin dentro del clip para que arranque directo en la acción
    (sin aire muerto al principio) y termine apenas después del remate. Mínimo 6 segundos.

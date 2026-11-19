@@ -338,7 +338,11 @@ def publicar(base_url, simulado=False):
     base = base_url.rstrip("/") + "/"
     video_url, portada_url = base + p["archivos"]["video"], base + p["archivos"]["portada"]
     video_local = p["local"]["video"]
-    redes = cfg.get("publicar") or {}
+    redes = dict(cfg.get("publicar") or {})
+    t_cfg = _turnos(cfg)[int(p["turno"]) - 1] if 0 < int(p.get("turno", 0)) <= len(_turnos(cfg)) else {}
+    if isinstance(t_cfg.get("redes"), list):
+        # el turno dice en qué redes sale (por ejemplo, YouTube solo en algunos por su cuota diaria)
+        redes = {k: (v and k in t_cfg["redes"]) for k, v in redes.items()}
     res = {}
 
     def intentar(nombre, fn):
