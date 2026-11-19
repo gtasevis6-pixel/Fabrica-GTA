@@ -1,0 +1,90 @@
+{
+  "_ayuda": "Editá este archivo desde GitHub (lápiz → Commit changes). usuario: tu @ en las redes. turnos: a qué hora sale cada video (hora de Argentina) y de qué tipo: clip (el clip más viral del momento), novedad (una noticia con voz en off) o guia (un truco o tip con voz en off). Podés agregar más turnos copiando una línea. minutos_aprobacion: cuánto espera tu respuesta antes de publicar solo. publicar: poné true en cada red a medida que la conectes.",
+  "usuario": "@GTASeVIs",
+  "email_aviso": "",
+  "_nota_email": "Vacío = te llega al Gmail de SMTP_USER. Si querés otro mail, ponelo acá (ojo: el repo es público y se ve).",
+  "automatico": false,
+  "_nota_automatico": "false = solo corre cuando vos tocás Run workflow. Poné true cuando la prueba ande bien y quieras los 3 videos por día solos.",
+  "firma": "Página fan. No estamos afiliados a Rockstar Games.",
+  "hashtags_fijos": ["#GTA6"],
+
+  "turnos": [
+    {"hora": "13:30", "tipo": "clip"},
+    {"hora": "18:30", "tipo": "novedad"},
+    {"hora": "22:00", "tipo": "clip"}
+  ],
+  "minutos_aprobacion": 5,
+  "minutos_antes": 20,
+  "ventana_horas": 4,
+
+  "publicar": {
+    "youtube": false,
+    "instagram_reel": false,
+    "facebook": false,
+    "tiktok": false
+  },
+  "youtube_privacidad": "public",
+  "youtube_categoria": "20",
+  "tiktok_privacidad": "SELF_ONLY",
+
+  "fuentes": {
+    "twitch": {
+      "juegos": ["Grand Theft Auto VI", "Grand Theft Auto V"],
+      "horas": 24,
+      "paginas": 3
+    },
+    "kick": {
+      "activo": true,
+      "categorias": ["grand-theft-auto-vi", "grand-theft-auto-v"],
+      "_nota": "Experimental: Kick no tiene API pública de clips y a veces bloquea a GitHub. Si falla, sigue con Twitch."
+    }
+  },
+
+  "clips": {
+    "idiomas": ["es"],
+    "aceptar_otros_idiomas": true,
+    "_nota_idiomas": "Primero busca clips en español. Si no hay buenos, usa otros idiomas y les pone subtítulos traducidos.",
+    "streamers_con_campana": [],
+    "_nota_campana": "Si te sumás a una campaña de clipping de un streamer, poné acá su nombre de canal: sus clips salen primero.",
+    "canales_bloqueados": [],
+    "duracion_min": 8,
+    "duracion_max": 60,
+    "vistas_minimas": 30,
+    "candidatos_a_revisar": 5,
+    "intentos": 3,
+    "zoom": 1.0
+  },
+
+  "noticias": {
+    "busquedas": ["GTA 6", "GTA VI Rockstar"],
+    "busquedas_guia": ["GTA 6 guía", "GTA 6 trucos", "GTA 6 secretos", "GTA 6 cómo conseguir"],
+    "rss": [
+      {"nombre": "RockstarINTEL", "url": "https://rockstarintel.com/feed"},
+      {"nombre": "r/GTA6", "url": "https://www.reddit.com/r/GTA6/top/.rss?t=day"}
+    ]
+  },
+
+  "revisor": true,
+  "whisper_modelo": "base",
+
+  "vigia_campanas": {
+    "activo": true,
+    "paginas": ["https://contentrewards.com/c/discover", "https://gtaviclipper.com/board"]
+  },
+
+  "gemini_modelos": ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-flash-lite-latest"],
+  "gemini_pensamiento": "low",
+
+  "voz_motor": "gemini",
+  "voz_gemini": "auto",
+  "voz_idioma": "es-MX",
+  "voz_genero": "hombre",
+  "voz_tempo": 1.05,
+  "voz_gemini_modelos": ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.1-flash-tts-preview"],
+  "voz": "es-MX-JorgeNeural",
+  "voz_velocidad": "+12%",
+  "duracion_maxima": 50,
+  "musica": "assets/music.mp3",
+  "musica_volumen": 0.08,
+  "instagram_musica": {"activa": false}
+}

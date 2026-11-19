@@ -1,0 +1,417 @@
+"""Publica en Instagram, YouTube y TikTok, y manda el mail de resumen."""
+import json
+import os
+import random
+import smtplib
+import subprocess
+import time
+from email.mime.text import MIMEText
+
+from . import util
+
+IG = "https://graph.instagram.com/v23.0/"
+
+
+# ------------------------------------------------------------------ secretos que se renuevan solos
+def actualizar_secreto(nombre, valor):
+    """Guarda un token renovado como secreto del repo (requiere el secreto GH_PAT)."""
+    pat = util.secreto("GH_PAT")
+    repo = os.getenv("GITHUB_REPOSITORY")
+    if not (pat and repo):
+        return False
+    r = subprocess.run(["gh", "secret", "set", nombre, "--repo", repo, "--body", valor],
+                       env={**os.environ, "GH_TOKEN": pat}, capture_output=True, text=True)
+    if r.returncode != 0:
+        util.log("No pude actualizar el secreto", nombre, r.stderr[:200])
+    return r.returncode == 0
+
+
+# ------------------------------------------------------------------ Instagram
+def _meta_error(r):
+    """Mensaje de error de Meta (Instagram o Facebook) con sus códigos, para poder diagnosticarlo."""
+    if r is None:
+        return "sin respuesta de Meta"
+    try:
+        e = r.json().get("error") or {}
+    except Exception:  # noqa
+        return f"HTTP {r.status_code}: {r.text[:300]}"
+    if not e:
+        return f"HTTP {r.status_code}: {r.text[:300]}"
+    msg = e.get("message", "") if isinstance(e, dict) else str(e)
+    if isinstance(e, dict):
+        if e.get("error_user_msg"):
+            msg += " · " + e["error_user_msg"]
+        codigos = [f"código {e['code']}" if e.get("code") is not None else "",
+                   f"subcódigo {e['error_subcode']}" if e.get("error_subcode") else "",
+                   e.get("type", "")]
+        codigos = [c for c in codigos if c]
+        if codigos:
+            msg += " (" + ", ".join(codigos) + ")"
+    return util.ocultar(msg)[:500]
+
+
+def _ig_error(r):
+    return _meta_error(r)
+
+
+def ig_token():
+    """Devuelve un token válido de Instagram y lo renueva cada 7 días."""
+    token = util.secreto("IG_TOKEN")
+    if not token:
+        return None, "falta el secreto IG_TOKEN"
+    estado = util.leer_json("data/estado.json", {})
+    ultima = estado.get("ig_renovado", "")
+    hoy = util.ahora()
+    if not ultima or (hoy - util.datetime.fromisoformat(ultima)).days >= 7:
+        r = util.pedir("GET", "https://graph.instagram.com/refresh_access_token",
+                       params={"grant_type": "ig_refresh_token", "access_token": token})
+        if r is not None and r.status_code == 200:
+            nuevo = r.json().get("access_token", token)
+            dias = int(r.json().get("expires_in", 0)) // 86400
+            estado["ig_renovado"] = hoy.isoformat()
+            estado["ig_vence_en_dias"] = dias
+            if nuevo != token:
+                if actualizar_secreto("IG_TOKEN", nuevo):
+                    token = nuevo
+                else:
+                    estado["ig_aviso"] = "El token de Instagram cambió y no se pudo guardar (falta GH_PAT)."
+            util.guardar_json("data/estado.json", estado)
+    return token, None
+
+
+class _ErrorProceso(RuntimeError):
+    """Instagram recibió el pedido pero falló al procesar el video (suele ser pasajero)."""
+
+
+def _ig_esperar(cid, token, minutos=6):
+    fin = time.time() + minutos * 60
+    while time.time() < fin:
+        r = util.pedir("GET", IG + cid, params={"fields": "status_code,status", "access_token": token})
+        st = (r.json() if r is not None and r.status_code == 200 else {}).get("status_code")
+        if st == "FINISHED":
+            return True
+        if st == "ERROR":
+            raise _ErrorProceso("Instagram no pudo procesar el archivo: " + str(r.json()))
+        time.sleep(10)
+    raise RuntimeError("Instagram tardó demasiado en procesar")
+
+
+def _ig_publicar(cid, token):
+    r = util.pedir("POST", IG + "me/media_publish", data={"creation_id": cid, "access_token": token})
+    if r.status_code != 200:
+        raise RuntimeError(_ig_error(r))
+    return r.json()["id"]
+
+
+IG_REINTENTOS = (True, True, False)   # con portada, con portada, sin portada
+IG_ESPERA_REINTENTO = 60
+
+
+# ------------------------------------------------------------------ Reel con música de Instagram
+# La API de audio de Instagram solo anda por el camino de Facebook (graph.facebook.com, con la cuenta de
+# Instagram vinculada a la página). Necesita IG_FB_ID y un token con instagram_basic + instagram_content_publish
+# (IG_FB_TOKEN o, si no está, FB_PAGE_TOKEN). Si algo falla, el Reel sale igual por el camino de siempre, sin música.
+IG_FB = "https://graph.facebook.com/v23.0/"
+
+
+def _ig_fb():
+    return (util.secreto("IG_FB_TOKEN") or util.secreto("FB_PAGE_TOKEN")), util.secreto("IG_FB_ID")
+
+
+def elegir_tema_ig(token, ig_id, im):
+    """Busca un tema en la biblioteca de Instagram (los autorizados para apps) y elige uno que no se haya
+    usado en los últimos videos. Devuelve (id, nombre) o (None, motivo)."""
+    busquedas = [b for b in (im.get("busquedas") or [""]) if isinstance(b, str)] or [""]
+    recientes = util.leer_json("data/estado.json", {}).get("ig_temas_recientes", [])
+    ultimo = "no encontré ningún tema"
+    for q in random.sample(busquedas, len(busquedas))[:3]:
+        params = {"audio_type": "music", "user_id": ig_id, "access_token": token}
+        if q.strip():
+            params["search_query"] = q.strip()  # vacío = los temas en tendencia
+        r = util.pedir("GET", IG_FB + "ig_audio", intentos=2, timeout=40, params=params)
+        if r is None or r.status_code != 200:
+            ultimo = _meta_error(r)
+            util.log("Música de Instagram: la búsqueda falló:", ultimo)
+            continue
+        temas = [t for t in (r.json() or {}).get("data", []) if isinstance(t, dict) and t.get("id")]
+        nuevos = [t for t in temas if str(t["id"]) not in recientes] or temas
+        if nuevos:
+            t = random.choice(nuevos[:15])
+            nombre = " - ".join(str(t.get(k)) for k in ("title", "artist", "display_artist", "name") if t.get(k))
+            return str(t["id"]), (nombre or str(t["id"])) + (f' (búsqueda: "{q}")' if q.strip() else " (tendencia)")
+    return None, ultimo
+
+
+def _anotar_tema(tema_id, nombre):
+    estado = util.leer_json("data/estado.json", {})
+    estado["ig_temas_recientes"] = ([tema_id] + [x for x in estado.get("ig_temas_recientes", []) if x != tema_id])[:30]
+    estado["ig_ultimo_tema"] = nombre
+    util.guardar_json("data/estado.json", estado)
+
+
+def _reel_con_musica(video_url, cover_url, caption, im):
+    token, ig_id = _ig_fb()
+    if not token or not ig_id:
+        raise RuntimeError("faltan IG_FB_ID y IG_FB_TOKEN (o FB_PAGE_TOKEN)")
+    tema_id, nombre = elegir_tema_ig(token, ig_id, im)
+    if not tema_id:
+        raise RuntimeError(nombre)
+    audio = {"audio_id": tema_id,
+             "audio_volume": max(0, min(100, int(im.get("volumen_musica", 15)))),
+             "video_volume": max(0, min(100, int(im.get("volumen_video", 100))))}
+    datos = {"media_type": "REELS", "video_url": video_url, "caption": caption, "share_to_feed": "true",
+             "audio_configuration": json.dumps(audio), "access_token": token}
+    if cover_url:
+        datos["cover_url"] = cover_url
+    r = util.pedir("POST", IG_FB + f"{ig_id}/media", data=datos)
+    if r is None or r.status_code != 200:
+        raise RuntimeError(_meta_error(r))
+    cid = r.json()["id"]
+    fin = time.time() + 6 * 60
+    while True:
+        r = util.pedir("GET", IG_FB + cid, params={"fields": "status_code,status", "access_token": token})
+        st = (r.json() if r is not None and r.status_code == 200 else {}).get("status_code")
+        if st == "FINISHED":
+            break
+        if st == "ERROR" or time.time() > fin:
+            raise RuntimeError("Instagram no pudo procesar el Reel con música: " + str(r.json() if r is not None else ""))
+        time.sleep(10)
+    r = util.pedir("POST", IG_FB + f"{ig_id}/media_publish", data={"creation_id": cid, "access_token": token})
+    if r is None or r.status_code != 200:
+        raise RuntimeError(_meta_error(r))
+    _anotar_tema(tema_id, nombre)
+    util.log("Reel publicado con música de Instagram:", nombre)
+    return r.json()["id"]
+
+
+def instagram_reel(video_url, cover_url, caption):
+    """Sube el Reel. Si está activa la música de Instagram, primero lo intenta con un tema de su biblioteca;
+    si eso falla, sale por el camino de siempre (sin música de Instagram).
+    Si Instagram falla al procesarlo (le pasa cada tanto sin motivo), lo vuelve a mandar
+    con un contenedor nuevo; la última vez sin portada, por si el problema era la portada."""
+    im = util.config().get("instagram_musica") or {}
+    if isinstance(im, dict) and im.get("activa"):
+        try:
+            return _reel_con_musica(video_url, cover_url, caption, im)
+        except Exception as e:  # noqa
+            util.log("Música de Instagram: no se pudo, sale sin música:", util.ocultar(e))
+            util.avisar("Instagram", "Salió sin música de Instagram: " + util.ocultar(e)[:200])
+    token, err = ig_token()
+    if err:
+        raise RuntimeError(err)
+    ultimo = ""
+    for n, con_portada in enumerate(IG_REINTENTOS, 1):
+        datos = {"media_type": "REELS", "video_url": video_url, "caption": caption,
+                 "share_to_feed": "true", "access_token": token}
+        if con_portada and cover_url:
+            datos["cover_url"] = cover_url
+        r = util.pedir("POST", IG + "me/media", data=datos)
+        if r is None or r.status_code != 200:
+            raise RuntimeError(_ig_error(r))
+        cid = r.json()["id"]
+        try:
+            _ig_esperar(cid, token)
+        except _ErrorProceso as e:
+            ultimo = str(e)
+            util.log(f"Instagram falló al procesar (intento {n} de {len(IG_REINTENTOS)}):", e)
+            if n < len(IG_REINTENTOS):
+                time.sleep(IG_ESPERA_REINTENTO)
+            continue
+        media_id = _ig_publicar(cid, token)
+        if n > 1:
+            util.avisar("Instagram", f"Salió al intento {n}" + ("" if con_portada else " (sin la portada)") + ".")
+        return media_id
+    raise RuntimeError(f"Falló {len(IG_REINTENTOS)} veces. " + ultimo)
+
+
+def instagram_carrusel(urls, caption):
+    token, err = ig_token()
+    if err:
+        raise RuntimeError(err)
+    ultimo = ""
+    for n in (1, 2):  # si Instagram falla al procesarlo, se arma de nuevo una vez más
+        hijos = []
+        for u in urls[:10]:
+            r = util.pedir("POST", IG + "me/media", data={"image_url": u, "is_carousel_item": "true",
+                                                           "access_token": token})
+            if r is None or r.status_code != 200:
+                raise RuntimeError(_ig_error(r))
+            hijos.append(r.json()["id"])
+        r = util.pedir("POST", IG + "me/media", data={"media_type": "CAROUSEL", "children": ",".join(hijos),
+                                                       "caption": caption, "access_token": token})
+        if r is None or r.status_code != 200:
+            raise RuntimeError(_ig_error(r))
+        cid = r.json()["id"]
+        try:
+            _ig_esperar(cid, token, minutos=3)
+        except _ErrorProceso as e:
+            ultimo = str(e)
+            util.log(f"Instagram falló al procesar el carrusel (intento {n} de 2):", e)
+            if n == 1:
+                time.sleep(IG_ESPERA_REINTENTO)
+            continue
+        return _ig_publicar(cid, token)
+    raise RuntimeError("Falló 2 veces. " + ultimo)
+
+
+# ------------------------------------------------------------------ YouTube
+def youtube(video_path, titulo, descripcion, tags, privacidad="public"):
+    cid, cs, rt = (util.secreto("YT_CLIENT_ID"), util.secreto("YT_CLIENT_SECRET"), util.secreto("YT_REFRESH_TOKEN"))
+    if not (cid and cs and rt):
+        raise RuntimeError("faltan los secretos de YouTube (YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN)")
+    r = util.pedir("POST", "https://oauth2.googleapis.com/token", data={
+        "client_id": cid, "client_secret": cs, "refresh_token": rt, "grant_type": "refresh_token"})
+    if r.status_code != 200:
+        raise RuntimeError("YouTube no renovó el acceso: " + r.text[:200])
+    acceso = r.json()["access_token"]
+    tamano = os.path.getsize(video_path)
+    meta = {
+        "snippet": {"title": titulo[:100], "description": descripcion[:4900], "tags": tags[:15],
+                    "categoryId": str(util.config().get("youtube_categoria", "20")), "defaultLanguage": "es",
+                    "defaultAudioLanguage": "es-419"},
+        "status": {"privacyStatus": privacidad, "selfDeclaredMadeForKids": False},
+    }
+    r = util.pedir("POST", "https://www.googleapis.com/upload/youtube/v3/videos",
+                   params={"uploadType": "resumable", "part": "snippet,status"}, json=meta,
+                   headers={"Authorization": f"Bearer {acceso}", "X-Upload-Content-Type": "video/mp4",
+                            "X-Upload-Content-Length": str(tamano)})
+    if r.status_code != 200:
+        raise RuntimeError("YouTube rechazó la subida: " + r.text[:300])
+    destino = r.headers["Location"]
+    with open(video_path, "rb") as f:
+        r = util.pedir("PUT", destino, data=f.read(), timeout=600,
+                       headers={"Authorization": f"Bearer {acceso}", "Content-Type": "video/mp4"})
+    if r.status_code not in (200, 201):
+        raise RuntimeError("YouTube falló al subir: " + r.text[:300])
+    return r.json()["id"]
+
+
+# ------------------------------------------------------------------ TikTok
+def tiktok(video_path, caption, privacidad="SELF_ONLY"):
+    ck, cs, rt = (util.secreto("TIKTOK_CLIENT_KEY"), util.secreto("TIKTOK_CLIENT_SECRET"),
+                  util.secreto("TIKTOK_REFRESH_TOKEN"))
+    if not (ck and cs and rt):
+        raise RuntimeError("faltan los secretos de TikTok")
+    r = util.pedir("POST", "https://open.tiktokapis.com/v2/oauth/token/", data={
+        "client_key": ck, "client_secret": cs, "grant_type": "refresh_token", "refresh_token": rt})
+    datos = r.json() if r is not None else {}
+    if r.status_code != 200 or "access_token" not in datos:
+        raise RuntimeError("TikTok no renovó el acceso: " + r.text[:200])
+    if datos.get("refresh_token") and datos["refresh_token"] != rt:
+        actualizar_secreto("TIKTOK_REFRESH_TOKEN", datos["refresh_token"])
+    acceso = datos["access_token"]
+    tamano = os.path.getsize(video_path)
+    r = util.pedir("POST", "https://open.tiktokapis.com/v2/post/publish/video/init/",
+                   headers={"Authorization": f"Bearer {acceso}", "Content-Type": "application/json; charset=UTF-8"},
+                   json={"post_info": {"title": caption[:2200], "privacy_level": privacidad,
+                                       "disable_comment": False, "disable_duet": False, "disable_stitch": False,
+                                       "video_cover_timestamp_ms": 100},
+                         "source_info": {"source": "FILE_UPLOAD", "video_size": tamano, "chunk_size": tamano,
+                                         "total_chunk_count": 1}})
+    if r.status_code != 200:
+        raise RuntimeError("TikTok rechazó la subida: " + r.text[:300])
+    d = r.json()["data"]
+    with open(video_path, "rb") as f:
+        r2 = util.pedir("PUT", d["upload_url"], data=f.read(), timeout=600,
+                        headers={"Content-Type": "video/mp4", "Content-Length": str(tamano),
+                                 "Content-Range": f"bytes 0-{tamano - 1}/{tamano}"})
+    if r2.status_code not in (200, 201):
+        raise RuntimeError("TikTok falló al subir: " + r2.text[:300])
+    return d.get("publish_id", "ok")
+
+
+# ------------------------------------------------------------------ mail
+# ------------------------------------------------------------------ Facebook (Reels de la página)
+FB = "https://graph.facebook.com/v25.0/"
+
+
+def _fb_error(r):
+    return _meta_error(r)
+
+
+def facebook_reel(video_path, descripcion, titulo=""):
+    """Sube el video como Reel a la página de Facebook (necesita FB_PAGE_TOKEN y FB_PAGE_ID)."""
+    token, pagina = util.secreto("FB_PAGE_TOKEN"), util.secreto("FB_PAGE_ID")
+    if not (token and pagina):
+        raise RuntimeError("faltan los secretos FB_PAGE_TOKEN y FB_PAGE_ID")
+    r = util.pedir("POST", FB + f"{pagina}/video_reels", data={"upload_phase": "start", "access_token": token})
+    if r is None or r.status_code != 200 or "video_id" not in r.json():
+        raise RuntimeError("Facebook no abrió la subida: " + _fb_error(r))
+    vid = r.json()["video_id"]
+    datos = open(video_path, "rb").read()
+    r = util.pedir("POST", f"https://rupload.facebook.com/video-upload/v25.0/{vid}", timeout=600,
+                   headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(len(datos)),
+                            "Content-Type": "application/octet-stream"}, data=datos)
+    if r is None or r.status_code != 200 or not r.json().get("success"):
+        raise RuntimeError("Facebook no recibió el video: " + _fb_error(r))
+    r = util.pedir("POST", FB + f"{pagina}/video_reels",
+                   data={"upload_phase": "finish", "video_id": vid, "video_state": "PUBLISHED",
+                         "description": descripcion[:2200], "title": titulo[:100], "access_token": token})
+    if r is None or r.status_code != 200 or not r.json().get("success"):
+        raise RuntimeError("Facebook no publicó el Reel: " + _fb_error(r))
+    fin = time.time() + 6 * 60
+    while time.time() < fin:
+        r = util.pedir("GET", FB + vid, params={"fields": "status", "access_token": token})
+        st = (r.json() if r is not None and r.status_code == 200 else {}).get("status", {})
+        fases = [st.get(k, {}) for k in ("uploading_phase", "processing_phase", "publishing_phase")]
+        if any(f.get("status") == "error" for f in fases) or st.get("video_status") == "error":
+            raise RuntimeError("Facebook rechazó el video: " + str(st)[:300])
+        if st.get("publishing_phase", {}).get("status") == "complete":
+            break
+        time.sleep(10)
+    return vid
+
+
+def mail(asunto, html):
+    usuario, clave = util.secreto("SMTP_USER"), util.secreto("SMTP_PASS")
+    if not (usuario and clave):
+        util.log("Sin SMTP configurado: no mando mail")
+        return False
+    destino = util.config().get("email_aviso") or usuario
+    msg = MIMEText(html, "html", "utf-8")
+    msg["Subject"], msg["From"], msg["To"] = asunto, usuario, destino
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=60) as s:
+        s.login(usuario, clave)
+        s.send_message(msg)
+    return True
+
+
+def facebook_metricas(video_id):
+    """Reproducciones de un Reel de la página (si Meta no las da, devuelve vacío y no corta nada)."""
+    token = util.secreto("FB_PAGE_TOKEN")
+    if not (token and video_id):
+        return {}
+    try:
+        for metrica in ("blue_reels_play_count", "total_video_views"):
+            r = util.pedir("GET", FB + f"{video_id}/video_insights", intentos=1,
+                           params={"metric": metrica, "access_token": token})
+            if r is not None and r.status_code == 200 and r.json().get("data"):
+                v = (r.json()["data"][0].get("values") or [{}])[0].get("value", 0)
+                return {"vistas": int(v or 0)}
+    except Exception as e:  # noqa
+        util.log("No pude leer las vistas de Facebook:", util.ocultar(e))
+    return {}
+
+
+def instagram_metricas(media_id):
+    """Vistas, alcance, guardados, compartidos, comentarios y likes de una publicación nuestra."""
+    token, err = ig_token()
+    if err:
+        return {}
+    for metricas in ("views,reach,saved,shares,comments,likes", "reach,saved,shares,comments,likes"):
+        r = util.pedir("GET", IG + f"{media_id}/insights", intentos=2,
+                       params={"metric": metricas, "access_token": token})
+        if r is not None and r.status_code == 200:
+            out = {}
+            for d in r.json().get("data", []):
+                v = (d.get("values") or [{}])[0].get("value")
+                if v is None:
+                    v = (d.get("total_value") or {}).get("value", 0)
+                out[d["name"]] = int(v or 0)
+            return out
+    r = util.pedir("GET", IG + media_id, intentos=2,
+                   params={"fields": "like_count,comments_count", "access_token": token})
+    if r is not None and r.status_code == 200:
+        j = r.json()
+        return {"likes": j.get("like_count", 0), "comments": j.get("comments_count", 0)}
+    return {}
