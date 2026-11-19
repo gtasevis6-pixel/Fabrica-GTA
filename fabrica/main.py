@@ -45,7 +45,12 @@ def _historial():
 
 
 def _hecho(fecha, turno):
-    return any(x.get("fecha") == fecha and int(x.get("turno", 0)) == int(turno) for x in _historial())
+    """Un turno está hecho si salió (o lo cancelaste). Si no hubo video, se reintenta en la próxima vuelta del
+    reloj, hasta `reintentos_turno` veces (por defecto 3) mientras la ventana siga abierta."""
+    del_turno = [x for x in _historial() if x.get("fecha") == fecha and int(x.get("turno", 0)) == int(turno)]
+    if any(x.get("tipo") != "nada" for x in del_turno):
+        return True
+    return len(del_turno) >= int(util.config().get("reintentos_turno", 3))
 
 
 def _turno_pendiente(cfg, momento=None):
@@ -358,7 +363,8 @@ def publicar(base_url, simulado=False):
     titulo = re.sub(r"\s+", " ", p["titulo"]).strip()[:90]
     tags_yt = [h.lstrip("#") for h in p.get("hashtags", [])] + ["GTA 6", "GTA VI", "Grand Theft Auto VI"]
     intentar("youtube", lambda: pub.youtube(video_local, f"{titulo} #GTA6", p["caption"], tags_yt,
-                                            cfg.get("youtube_privacidad", "public")))
+                                            cfg.get("youtube_privacidad", "public"),
+                                            portada=(p.get("local") or {}).get("portada")))
     intentar("instagram_reel", lambda: pub.instagram_reel(video_url, portada_url, p["caption"]))
     intentar("facebook", lambda: pub.facebook_reel(video_local, p["caption"], titulo))
     intentar("tiktok", lambda: pub.tiktok(video_local, p["caption"], cfg.get("tiktok_privacidad", "SELF_ONLY")))

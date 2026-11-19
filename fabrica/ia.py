@@ -88,7 +88,7 @@ def _mensaje(r):
         return (getattr(r, "text", "") or "")[:220]
 
 
-def gemini(sistema, usuario, temperatura=0.9):
+def _gemini_una_vuelta(sistema, usuario, temperatura=0.9):
     global _modelo_ok
     clave = util.secreto("GEMINI_API_KEY")
     if not clave:
@@ -166,3 +166,22 @@ def gemini(sistema, usuario, temperatura=0.9):
 def prompt(nombre):
     return _prompt(nombre)
 
+
+
+def gemini(sistema, usuario, temperatura=0.9):
+    """Pide a Gemini. Si todos los modelos están saturados (pasa en días de mucha demanda, como el lanzamiento),
+    espera y prueba otra vuelta (config gemini_vueltas, por defecto 3; gemini_espera_vuelta, 60 s)."""
+    cfg = util.config()
+    vueltas = max(1, int(cfg.get("gemini_vueltas", 3)))
+    for n in range(1, vueltas + 1):
+        try:
+            return _gemini_una_vuelta(sistema, usuario, temperatura)
+        except RuntimeError as e:
+            texto = str(e)
+            saturado = any(x in texto for x in ("503", "429", "no respondió", "high demand", "overloaded",
+                                                "UNAVAILABLE", "RESOURCE_EXHAUSTED"))
+            if not saturado or n == vueltas or "Falta el secreto" in texto:
+                raise
+            espera = int(cfg.get("gemini_espera_vuelta", 60)) * n
+            util.log(f"Gemini saturado en todos los modelos (vuelta {n} de {vueltas}): espero {espera} s")
+            time.sleep(espera)

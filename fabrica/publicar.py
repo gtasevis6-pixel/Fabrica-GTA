@@ -291,7 +291,33 @@ def instagram_carrusel(urls, caption):
 
 
 # ------------------------------------------------------------------ YouTube
-def youtube(video_path, titulo, descripcion, tags, privacidad="public"):
+def _miniatura_yt(acceso, video_id, portada):
+    """Sube la portada como miniatura. YouTube solo lo permite en canales verificados (youtube.com/verify)."""
+    if not portada or not os.path.exists(portada):
+        return
+    datos = open(portada, "rb").read()
+    if len(datos) > 2_000_000:  # YouTube acepta hasta 2 MB
+        from PIL import Image
+        import io
+        im = Image.open(portada).convert("RGB")
+        buf = io.BytesIO()
+        im.save(buf, "JPEG", quality=82)
+        datos = buf.getvalue()
+    r = util.pedir("POST", "https://www.googleapis.com/upload/youtube/v3/thumbnails/set",
+                   params={"videoId": video_id}, data=datos,
+                   headers={"Authorization": f"Bearer {acceso}", "Content-Type": "image/jpeg"})
+    if r is not None and r.status_code == 200:
+        util.log("Miniatura de YouTube puesta")
+        return
+    texto = getattr(r, "text", "")[:300]
+    if r is not None and r.status_code == 403:
+        util.avisar("Miniatura de YouTube", "YouTube no dejó poner la miniatura: el canal tiene que estar "
+                    "verificado con tu celular en https://www.youtube.com/verify . " + util.ocultar(texto)[:150])
+    else:
+        util.avisar("Miniatura de YouTube", "No se pudo poner: " + util.ocultar(texto))
+
+
+def youtube(video_path, titulo, descripcion, tags, privacidad="public", portada=None):
     cid, cs, rt = (util.secreto("YT_CLIENT_ID"), util.secreto("YT_CLIENT_SECRET"), util.secreto("YT_REFRESH_TOKEN"))
     if not (cid and cs and rt):
         raise RuntimeError("faltan los secretos de YouTube (YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN)")
@@ -319,7 +345,12 @@ def youtube(video_path, titulo, descripcion, tags, privacidad="public"):
                        headers={"Authorization": f"Bearer {acceso}", "Content-Type": "video/mp4"})
     if r.status_code not in (200, 201):
         raise RuntimeError("YouTube falló al subir: " + r.text[:300])
-    return r.json()["id"]
+    vid = r.json()["id"]
+    try:
+        _miniatura_yt(acceso, vid, portada)
+    except Exception as e:  # noqa  (si falla la miniatura, el video ya está subido)
+        util.avisar("Miniatura de YouTube", util.ocultar(e))
+    return vid
 
 
 # ------------------------------------------------------------------ TikTok

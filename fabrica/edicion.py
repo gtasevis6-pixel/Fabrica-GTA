@@ -105,7 +105,7 @@ def _bloques(palabras, max_palabras=3, max_chars=16):
 
 
 def armar_ass(ruta, dur, gancho="", credito="", usuario="", palabras=None, frases=None, y_video=None,
-              h_video=None, gancho_segundos=3.0):
+              h_video=None, gancho_segundos=3.0, cierre=""):
     """palabras: [[ini, fin, texto], ...] para subtítulos palabra por palabra.
     frases: [[ini, fin, texto], ...] para subtítulos por frase (traducciones)."""
     fuente = fuente_titulo()
@@ -140,9 +140,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         # el gancho entra grande y con un "pop"; después queda más chico como título
         ev.append(f"Dialogue: 2,{_t(0)},{_t(corte)},Gancho,,0,0,0,,{{\\an8\\pos({W // 2},{max(150, y_video - 330)})"
                   f"\\fscx80\\fscy80\\t(0,160,\\fscx100\\fscy100)\\c{AMARILLO_ASS}}}{g}")
-        if dur > corte:
-            ev.append(f"Dialogue: 1,{_t(corte)},{_t(dur)},Titulo,,0,0,0,,{{\\an8\\pos({W // 2},"
+        c = _limpio(cierre).upper()
+        fin_titulo = max(corte, dur - 2.2) if c and dur > corte + 3 else dur
+        if fin_titulo > corte:
+            ev.append(f"Dialogue: 1,{_t(corte)},{_t(fin_titulo)},Titulo,,0,0,0,,{{\\an8\\pos({W // 2},"
                       f"{max(170, y_video - 250)})}}{g}")
+        if c and fin_titulo < dur:
+            # el cierre reemplaza al título en los últimos 2 segundos, con el mismo "pop" del gancho
+            ev.append(f"Dialogue: 2,{_t(fin_titulo)},{_t(dur)},Gancho,,0,0,0,,{{\\an8\\pos({W // 2},"
+                      f"{max(150, y_video - 330)})\\fscx80\\fscy80\\t(0,160,\\fscx100\\fscy100)"
+                      f"\\c{AMARILLO_ASS}}}{c}")
     if credito:
         ev.append(f"Dialogue: 1,{_t(0)},{_t(dur)},Credito,,0,0,0,,{{\\an5\\pos({W // 2},{y_credito})}}"
                   f"{_limpio(credito)}")
@@ -196,7 +203,7 @@ def _esc(p):
 
 
 def render_clip(origen, destino, carpeta, gancho, credito, usuario, palabras=None, frases=None,
-                recorte=None, zoom=1.0):
+                recorte=None, zoom=1.0, cierre=""):
     """Arma el Short a partir de un clip (con su audio original)."""
     carpeta = Path(carpeta)
     ini, fin = 0.0, duracion(origen)
@@ -210,7 +217,8 @@ def render_clip(origen, destino, carpeta, gancho, credito, usuario, palabras=Non
     # tiempos de subtítulos relativos al recorte
     pal = [[p[0] - ini, p[1] - ini, p[2]] for p in (palabras or []) if p[1] > ini and p[0] < fin]
     fra = [[max(0, f[0] - ini), f[1] - ini, f[2]] for f in (frases or []) if f[1] > ini and f[0] < fin]
-    ass = armar_ass(carpeta / "textos.ass", dur, gancho, credito, usuario, pal or None, fra or None, y, h)
+    ass = armar_ass(carpeta / "textos.ass", dur, gancho, credito, usuario, pal or None, fra or None, y, h,
+                    cierre=cierre)
     filtro, _, _ = _filtro_vertical(ancho, alto, zoom, dur, ass)
     audio = []
     if tiene_audio(origen):

@@ -169,6 +169,28 @@ def producir_clip(cfg, carpeta, usados, excluir=()):
     raise SinMaterial("Ningún clip pasó la revisión hoy.")
 
 
+def ajustar_recorte(recorte, palabras, duracion_total):
+    """Corre el inicio y el fin del recorte para no cortar a mitad de una frase: el inicio va antes de la
+    palabra que estaría cortada y el fin se estira hasta la próxima pausa (máximo 3 s más)."""
+    try:
+        a, b = float(recorte[0]), float(recorte[1])
+    except Exception:  # noqa
+        return recorte
+    pal = sorted(palabras or [], key=lambda w: w[0])
+    for w in pal:  # inicio: si cae en medio de una palabra o pegado a ella, arranca un poco antes
+        if w[0] - 0.25 < a < w[1] + 0.1:
+            a = max(0.0, w[0] - 0.3)
+            break
+    # fin: mientras haya palabras pegadas (sin pausa de 0,6 s), sigue hasta que termine la frase
+    for w in pal:
+        if w[0] <= b + 0.6 and w[1] > b - 0.05:
+            if w[1] + 0.4 - float(recorte[1]) > 3.0:
+                break
+            b = w[1] + 0.4
+    b = min(b + 0.3, duracion_total)  # un respiro al final para que no corte seco
+    return [round(a, 2), round(b, 2)]
+
+
 def _render_y_revisar(cfg, carpeta, x, ed):
     c = cfg.get("clips") or {}
     plataforma = {"twitch": "twitch.tv", "kick": "kick.com"}.get(x["plataforma"], x["plataforma"])
@@ -176,14 +198,21 @@ def _render_y_revisar(cfg, carpeta, x, ed):
     es_espanol = (x["idioma"] or x["idioma_oido"] or "").startswith("es")
     frases = None if es_espanol else [f for f in (ed.get("subtitulos") or []) if isinstance(f, list) and len(f) == 3]
     palabras = x["palabras"] if es_espanol else None
+    if ed.get("recorte"):
+        nuevo = ajustar_recorte(ed["recorte"], x["palabras"], edicion.duracion(x["archivo"]))
+        if nuevo != ed["recorte"]:
+            util.log("Recorte ajustado para no cortar frases:", ed["recorte"], "→", nuevo)
+        ed = {**ed, "recorte": nuevo}
     for vuelta in range(2):
         video = carpeta / "video.mp4"
         edicion.render_clip(x["archivo"], video, carpeta, ed.get("gancho", ""), credito, cfg.get("usuario", ""),
-                            palabras=palabras, frases=frases, recorte=ed.get("recorte"), zoom=c.get("zoom", 1.0))
+                            palabras=palabras, frases=frases, recorte=ed.get("recorte"), zoom=c.get("zoom", 1.0),
+                            cierre=ed.get("cierre", ""))
         portada_p = carpeta / "portada.jpg"
         ini = float((ed.get("recorte") or [0])[0] or 0)
         edicion.portada(x["archivo"], portada_p, float(ed.get("portada_seg") or ini + 2), ed.get("gancho", ""))
-        textos = (f"GANCHO: {ed.get('gancho')}\nTÍTULO: {ed.get('titulo')}\nCAPTION: {ed.get('caption')}\n"
+        textos = (f"GANCHO: {ed.get('gancho')}\nCIERRE: {ed.get('cierre', '')}\nTÍTULO: {ed.get('titulo')}\n"
+                  f"CAPTION: {ed.get('caption')}\n"
                   f"STREAMER: {x['canal']} ({x['plataforma']})\nLO QUE SE DICE: {_texto_con_tiempos(x['palabras'])}")
         r = revisar(cfg, "clip", video, portada_p, textos, carpeta)
         if r.get("aprobado"):
