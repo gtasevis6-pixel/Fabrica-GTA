@@ -24,8 +24,21 @@ def _imagen(p):
     return {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(Path(p).read_bytes()).decode()}}
 
 
+_whisper = None  # el modelo se carga una sola vez por ejecución
+
+
+def _audio_16k(wav):
+    """Lee el WAV mono de 16 kHz que arma ffmpeg y lo pasa a números (sin depender de PyAV)."""
+    import wave
+    import numpy as np
+    with wave.open(str(wav), "rb") as w:
+        datos = w.readframes(w.getnframes())
+    return np.frombuffer(datos, dtype=np.int16).astype(np.float32) / 32768.0
+
+
 def transcribir(video, cfg):
     """Lo que se escucha en el clip, con tiempo de cada palabra (faster-whisper, gratis, en GitHub)."""
+    global _whisper
     try:
         from faster_whisper import WhisperModel
     except Exception:  # noqa
@@ -33,10 +46,16 @@ def transcribir(video, cfg):
         return [], ""
     try:
         wav = Path(video).with_suffix(".16k.wav")
-        edicion.run(["ffmpeg", "-y", "-v", "error", "-i", str(video), "-vn", "-ac", "1", "-ar", "16000", str(wav)])
-        modelo = WhisperModel(cfg.get("whisper_modelo", "base"), device="cpu", compute_type="int8")
-        segs, info = modelo.transcribe(str(wav), word_timestamps=True, vad_filter=True, beam_size=1,
-                                       condition_on_previous_text=False)
+        edicion.run(["ffmpeg", "-y", "-v", "error", "-i", str(video), "-vn", "-ac", "1", "-ar", "16000",
+                     "-c:a", "pcm_s16le", str(wav)])
+        audio = _audio_16k(wav)
+        if len(audio) < 16000 * 0.5:
+            return [], ""
+        if _whisper is None:
+            _whisper = WhisperModel(cfg.get("whisper_modelo", "base"), device="cpu", compute_type="int8")
+        # se le pasa el audio ya leído: así no usa PyAV (cuyas versiones nuevas rompen faster-whisper)
+        segs, info = _whisper.transcribe(audio, word_timestamps=True, vad_filter=True, beam_size=1,
+                                         condition_on_previous_text=False)
         palabras = [[float(w.start), float(w.end), w.word.strip()] for s in segs for w in (s.words or [])
                     if w.word.strip()]
         return palabras, getattr(info, "language", "") or ""
