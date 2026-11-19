@@ -18,9 +18,9 @@
   "ventana_horas": 4,
 
   "publicar": {
-    "youtube": false,
-    "instagram_reel": false,
-    "facebook": false,
+    "youtube": true,
+    "instagram_reel": true,
+    "facebook": true,
     "tiktok": false
   },
   "youtube_privacidad": "public",
@@ -50,6 +50,10 @@
     "duracion_min": 8,
     "duracion_max": 60,
     "vistas_minimas": 30,
+    "top_espanol": {"twitch": 6, "kick": 2},
+    "top_otros_idiomas": 2,
+    "otros_idiomas_por_dia": 1,
+    "_nota_top": "Top del día: los más vistos en español de cada plataforma + los 2 más virales en otro idioma (como mucho 1 por día). La IA mira 5: 4 en español y 1 en otro idioma, y elige.",
     "candidatos_a_revisar": 5,
     "intentos": 3,
     "zoom": 1.0
