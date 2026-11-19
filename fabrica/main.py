@@ -9,6 +9,7 @@
   resumen    muestra el resultado en la ejecución (modo prueba, sin publicar)
   revisar    lo usa el formulario «Revisar video»
   vigia      busca campañas de clipping nuevas de GTA y te avisa
+  probar     revisa todas las claves sin publicar nada
 """
 import argparse
 import html
@@ -261,7 +262,7 @@ def _registrar(p, res):
     h = _historial()
     h.append({"fecha": p["fecha"], "turno": p["turno"], "tipo": p["tipo"], "titulo": p["titulo"],
               "clip": (p.get("clip") or {}).get("url", ""), "streamer": (p.get("clip") or {}).get("canal", ""),
-              "links": p.get("links", []), "resultados": res,
+              "links": p.get("links", []), "resultados": res, "otro_idioma": bool(p.get("otro_idioma")),
               "hora": util.ahora().strftime("%H:%M")})
     util.guardar_json("data/historial.json", h[-500:])
     carpeta = util.RAIZ / "publicaciones"
@@ -453,6 +454,107 @@ def vigia():
             util.log("No pude mandar el mail:", ex)
 
 
+# ------------------------------------------------------------------ probar conexiones (no publica nada)
+def probar():
+    """Revisa cada clave con una consulta que no publica nada y deja un cuadro con el resultado."""
+    cfg = util.config()
+    filas = []
+
+    def fila(nombre, fn):
+        try:
+            ok, detalle = fn()
+        except Exception as e:  # noqa
+            ok, detalle = False, f"{type(e).__name__}: {util.ocultar(e)[:200]}"
+        filas.append((nombre, ok, detalle))
+        util.log(nombre, "OK" if ok else "FALLA", "·", detalle)
+
+    def falta(*nombres):
+        f = [n for n in nombres if not util.secreto(n)]
+        return (False, "falta el secreto " + ", ".join(f)) if f else None
+
+    def gemini():
+        if falta("GEMINI_API_KEY"):
+            return falta("GEMINI_API_KEY")
+        from . import ia
+        r = ia.gemini("Respondé solo JSON.", 'Devolvé {"ok": true}', temperatura=0.1)
+        return bool(r.get("ok")), "respondió bien"
+
+    def twitch():
+        if falta("TWITCH_CLIENT_ID", "TWITCH_CLIENT_SECRET"):
+            return falta("TWITCH_CLIENT_ID", "TWITCH_CLIENT_SECRET")
+        from . import fuentes
+        juego = ((cfg.get("fuentes") or {}).get("twitch") or {}).get("juegos", ["Grand Theft Auto VI"])[0]
+        gid = fuentes._twitch_juego(juego)
+        return bool(gid), f"encontró «{juego}»" if gid else f"no encontró «{juego}»"
+
+    def mail():
+        if falta("SMTP_USER", "SMTP_PASS"):
+            return falta("SMTP_USER", "SMTP_PASS")
+        from . import publicar as pub
+        pub.mail("[GTA] Prueba de conexiones", "<p>Si te llegó este mail, el aviso por mail anda bien.</p>")
+        return True, "mandé un mail de prueba: fijate que te haya llegado"
+
+    def youtube():
+        if falta("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN"):
+            return falta("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN")
+        r = util.pedir("POST", "https://oauth2.googleapis.com/token", data={
+            "client_id": util.secreto("YT_CLIENT_ID"), "client_secret": util.secreto("YT_CLIENT_SECRET"),
+            "refresh_token": util.secreto("YT_REFRESH_TOKEN"), "grant_type": "refresh_token"})
+        if r is None or r.status_code != 200:
+            return False, "Google rechazó las claves: " + util.ocultar(getattr(r, "text", ""))[:200]
+        alcance = r.json().get("scope", "")
+        if "youtube.upload" not in alcance and "auth/youtube" not in alcance:
+            return False, "el token no tiene permiso para subir videos (scope youtube.upload)"
+        return True, "las claves andan y tienen permiso para subir videos"
+
+    G = "https://graph.facebook.com/v23.0/"
+
+    def facebook():
+        if falta("FB_PAGE_TOKEN", "FB_PAGE_ID"):
+            return falta("FB_PAGE_TOKEN", "FB_PAGE_ID")
+        tok, pid = util.secreto("FB_PAGE_TOKEN"), util.secreto("FB_PAGE_ID")
+        r = util.pedir("GET", G + "me", params={"fields": "id,name", "access_token": tok})
+        if r is None or r.status_code != 200:
+            from . import publicar as pub
+            return False, pub._meta_error(r)
+        d = r.json()
+        if str(d.get("id")) != str(pid):
+            return False, (f"el token es de «{d.get('name')}» ({d.get('id')}), no de la página {pid}: "
+                           "cargá el access_token de la página, no el de tu usuario")
+        return True, f"token de la página «{d.get('name')}»"
+
+    def instagram():
+        if util.secreto("IG_TOKEN"):
+            r = util.pedir("GET", "https://graph.instagram.com/v23.0/me",
+                           params={"fields": "username", "access_token": util.secreto("IG_TOKEN")})
+            ok = r is not None and r.status_code == 200
+            return ok, ("cuenta @" + r.json().get("username", "?")) if ok else "IG_TOKEN no anda"
+        if falta("FB_PAGE_TOKEN", "IG_FB_ID"):
+            return falta("FB_PAGE_TOKEN", "IG_FB_ID")
+        r = util.pedir("GET", G + util.secreto("IG_FB_ID"),
+                       params={"fields": "username", "access_token": util.secreto("FB_PAGE_TOKEN")})
+        if r is None or r.status_code != 200:
+            from . import publicar as pub
+            return False, pub._meta_error(r)
+        return True, "cuenta @" + r.json().get("username", "?") + " (publica por la página de Facebook)"
+
+    fila("Gemini", gemini)
+    fila("Twitch", twitch)
+    fila("Mail", mail)
+    fila("YouTube", youtube)
+    fila("Facebook", facebook)
+    fila("Instagram", instagram)
+    redes = cfg.get("publicar") or {}
+    md = "## Prueba de conexiones (no se publicó nada)\n\n| | Qué | Resultado |\n|---|---|---|\n"
+    md += "".join(f"| {'✅' if ok else '❌'} | {n} | {d.replace('|', '/')} |\n" for n, ok, d in filas)
+    md += ("\nRedes activadas en config.json: " +
+           (", ".join(k for k, v in redes.items() if v) or "ninguna") +
+           f" · automatico: {'sí' if cfg.get('automatico') else 'no'}\n")
+    _resumen_md(md)
+    if not all(ok for _, ok, _ in filas):
+        util.avisar("Prueba de conexiones", "Hay conexiones con falla: mirá el cuadro de abajo.")
+
+
 # ------------------------------------------------------------------ entrada
 def principal():
     ap = argparse.ArgumentParser()
@@ -482,6 +584,8 @@ def principal():
             revisar()
         elif a.comando == "vigia":
             vigia()
+        elif a.comando == "probar":
+            probar()
         else:
             raise SystemExit(f"Comando desconocido: {a.comando}")
     except SystemExit:
