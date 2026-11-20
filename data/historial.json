@@ -45,5 +45,21 @@
     },
     "otro_idioma": false,
     "hora": "22:58"
+  },
+  {
+    "fecha": "2026-11-19",
+    "turno": 8,
+    "tipo": "clip",
+    "titulo": "Robando una patrulla de policía en GTA 6",
+    "clip": "https://www.twitch.tv/dicrim_rd69/clip/PeppyCharmingBeefCorgiDerp-TnMRtCymAUehQw1o",
+    "streamer": "dicrim_rd69",
+    "links": [],
+    "resultados": {
+      "youtube": "tUq6zbTwSXc",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "00:01"
   }
 ]
