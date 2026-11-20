@@ -3,7 +3,7 @@
   "usuario": "@GTASeVIs",
   "email_aviso": "",
   "_nota_email": "Vacío = te llega al Gmail de SMTP_USER. Si querés otro mail, ponelo acá (ojo: el repo es público y se ve).",
-  "automatico": false,
+  "automatico": true,
   "_nota_automatico": "false = solo corre cuando vos tocás Run workflow. Poné true cuando la prueba ande bien y quieras los videos de todos los turnos solos.",
   "firma": "Página fan. No estamos afiliados a Rockstar Games.",
   "hashtags_fijos": ["#GTA6"],
