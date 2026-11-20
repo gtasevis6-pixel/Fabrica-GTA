@@ -123,5 +123,22 @@
     "otro_idioma": false,
     "hora": "09:07",
     "run": 44731484158
+  },
+  {
+    "fecha": "2026-11-20",
+    "turno": 2,
+    "tipo": "clip",
+    "titulo": "El peor piloto en la carrera de GTA 6",
+    "clip": "https://www.twitch.tv/djmariio/clip/OddSilkyPterodactylTBTacoRight--htdXNROQ4nYRoZL",
+    "streamer": "DjMaRiiO",
+    "links": [],
+    "resultados": {
+      "youtube": "uCGw4tlGR7c",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "11:32",
+    "run": 44752150820
   }
 ]
