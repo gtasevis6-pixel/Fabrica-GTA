@@ -107,5 +107,21 @@
     "reintentos": [
       "2026-11-20 03:17"
     ]
+  },
+  {
+    "fecha": "2026-11-20",
+    "turno": 1,
+    "tipo": "clip",
+    "titulo": "Rubius intenta esconderse en GTA 6 y pasa esto",
+    "clip": "https://www.twitch.tv/rubius/clip/DependableFragileRadishDuDudu-_E9o6gCC-TLwRcpg",
+    "streamer": "Rubius",
+    "links": [],
+    "resultados": {
+      "instagram_reel": "18144745399620693",
+      "facebook": "1150793494313695"
+    },
+    "otro_idioma": false,
+    "hora": "09:07",
+    "run": 44731484158
   }
 ]
