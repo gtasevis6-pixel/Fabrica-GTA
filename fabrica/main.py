@@ -268,7 +268,7 @@ def _registrar(p, res):
     h.append({"fecha": p["fecha"], "turno": p["turno"], "tipo": p["tipo"], "titulo": p["titulo"],
               "clip": (p.get("clip") or {}).get("url", ""), "streamer": (p.get("clip") or {}).get("canal", ""),
               "links": p.get("links", []), "resultados": res, "otro_idioma": bool(p.get("otro_idioma")),
-              "hora": util.ahora().strftime("%H:%M")})
+              "hora": util.ahora().strftime("%H:%M"), "run": int(os.getenv("GITHUB_RUN_ID", "0") or 0) or None})
     util.guardar_json("data/historial.json", h[-500:])
     carpeta = util.RAIZ / "publicaciones"
     carpeta.mkdir(exist_ok=True)
@@ -603,6 +603,15 @@ def principal():
             vigia()
         elif a.comando == "probar":
             probar()
+        elif a.comando == "reintentar_preparar":
+            from . import reintentar
+            reintentar.preparar()
+        elif a.comando == "reintentar_online":
+            from . import reintentar
+            reintentar.online(a.base_url)
+        elif a.comando == "reintentar_publicar":
+            from . import reintentar
+            reintentar.publicar(a.base_url)
         else:
             raise SystemExit(f"Comando desconocido: {a.comando}")
     except SystemExit:
