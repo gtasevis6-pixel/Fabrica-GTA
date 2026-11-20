@@ -1,0 +1,72 @@
+name: Reintentar publicación
+
+# Vuelve a subir a Instagram y Facebook los videos de los últimos 2 días que fallaron ahí.
+# YouTube no se repite. GitHub guarda los videos 1 día: lo más viejo no se puede rescatar.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: fabrica-gta
+  cancel-in-progress: false
+
+jobs:
+  reintentar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      IG_TOKEN: ${{ secrets.IG_TOKEN }}
+      IG_FB_ID: ${{ secrets.IG_FB_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests pillow
+      - name: Buscar lo que falló y bajar los videos
+        id: prep
+        run: python -m fabrica.main reintentar_preparar
+      - if: steps.prep.outputs.hay == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: out/reintento
+      - if: steps.prep.outputs.hay == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v5
+      - if: steps.prep.outputs.hay == 'true'
+        name: Esperar a que los videos estén online
+        run: python -m fabrica.main reintentar_online --base-url "${{ steps.deployment.outputs.page_url }}"
+      - if: steps.prep.outputs.hay == 'true'
+        name: Publicar en las redes que fallaron
+        run: python -m fabrica.main reintentar_publicar --base-url "${{ steps.deployment.outputs.page_url }}"
+      - if: steps.prep.outputs.hay == 'true'
+        name: Guardar historial
+        run: |
+          git config user.name "fabrica-gta-bot"
+          git config user.email "fabrica-gta-bot@users.noreply.github.com"
+          RAMA="${{ github.ref_name }}"
+          cp data/historial.json /tmp/historial.json
+          for i in 1 2 3 4 5; do
+            git fetch -q origin "$RAMA"
+            git reset -q --hard "origin/$RAMA"
+            cp /tmp/historial.json data/historial.json
+            git add data/historial.json
+            git diff --cached --quiet && { echo "Nada nuevo para guardar."; exit 0; }
+            git commit -q -m "Reintento de publicación [skip ci]"
+            git push -q origin "HEAD:$RAMA" && { echo "Historial guardado."; exit 0; }
+            sleep $((i * 10))
+          done
+          echo "No se pudo guardar el historial" && exit 1
