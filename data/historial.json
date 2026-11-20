@@ -140,5 +140,15 @@
     "otro_idioma": false,
     "hora": "11:32",
     "run": 44752150820
+  },
+  {
+    "fecha": "2026-11-20",
+    "turno": 3,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "clip: Ningún clip pasó la revisión hoy.",
+      "novedad: El revisor rechazó la novedad: El contenido inventa datos financieros específicos (los '2.000 millones de dólares') que no aparecen en el material proporcionado.; El material suministrado no menciona estadísticas de ventas ni registros históricos de recaudación para GTA 6."
+    ]
   }
 ]
