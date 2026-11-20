@@ -150,5 +150,15 @@
       "clip: Ningún clip pasó la revisión hoy.",
       "novedad: El revisor rechazó la novedad: El contenido inventa datos financieros específicos (los '2.000 millones de dólares') que no aparecen en el material proporcionado.; El material suministrado no menciona estadísticas de ventas ni registros históricos de recaudación para GTA 6."
     ]
+  },
+  {
+    "fecha": "2026-11-20",
+    "turno": 3,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "clip: Ningún clip pasó la revisión hoy.",
+      "novedad: El revisor rechazó la novedad: El guion, el gancho y el título afirman que el juego facturó 2.000 millones de dólares en su primer día, dato que no está presente en el material provisto. Se deben seguir estrictamente los datos del material y no inventar cifras de facturación.; Al ser un error en el guion narrado, el video no puede publicarse."
+    ]
   }
 ]
