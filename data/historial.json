@@ -223,5 +223,21 @@
       "clip: Ningún clip pasó la revisión hoy.",
       "novedad: El revisor rechazó la novedad: El video contiene desnudez explícita visible en el gameplay (fotogramas 2 y 4), lo cual viola las normas de contenido."
     ]
+  },
+  {
+    "fecha": "2026-11-20",
+    "turno": 6,
+    "tipo": "clip",
+    "titulo": "Interactuando con animales en GTA 5",
+    "clip": "https://www.twitch.tv/illojuan/clip/DignifiedAggressiveZebraCoolStoryBro-Jx6dSpRu2uUcadeI",
+    "streamer": "IlloJuan",
+    "links": [],
+    "resultados": {
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "21:28",
+    "run": 44843022909
   }
 ]
