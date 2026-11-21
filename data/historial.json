@@ -256,5 +256,22 @@
     "otro_idioma": false,
     "hora": "22:58",
     "run": 44852230375
+  },
+  {
+    "fecha": "2026-11-20",
+    "turno": 8,
+    "tipo": "clip",
+    "titulo": "Las interacciones con NPCs en GTA 6 están a otro nivel",
+    "clip": "https://www.twitch.tv/illojuan/clip/SavageKathishHamburgerImGlitch-sBAqy6Ohk4rxrlLV",
+    "streamer": "IlloJuan",
+    "links": [],
+    "resultados": {
+      "youtube": "ptYsQcs6gFs",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "00:02",
+    "run": 44857942480
   }
 ]
