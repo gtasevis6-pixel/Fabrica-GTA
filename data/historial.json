@@ -439,5 +439,22 @@
     "otro_idioma": false,
     "hora": "20:32",
     "run": 44960719350
+  },
+  {
+    "fecha": "2026-11-21",
+    "turno": 9,
+    "tipo": "clip",
+    "titulo": "DjMaRiiO descubre la escena más loca del limpiapiscinas en GTA 6",
+    "clip": "https://www.twitch.tv/djmariio/clip/HappySaltyMochaPastaThat-ZTuc0N8TqArH1pfB",
+    "streamer": "DjMaRiiO",
+    "links": [],
+    "resultados": {
+      "youtube": "3KsfNWIPu1k",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "00:00",
+    "run": 44977939128
   }
 ]
