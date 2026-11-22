@@ -488,5 +488,16 @@
     "otro_idioma": true,
     "hora": "09:24",
     "run": 45021375872
+  },
+  {
+    "fecha": "2026-11-22",
+    "turno": 2,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "guia: El revisor rechazó la novedad: El dato sobre cómo se desbloquean los trucos no está en el material provisto.",
+      "clip: Ningún clip pasó la revisión hoy.",
+      "novedad: El revisor rechazó la novedad: El video contiene imágenes de un club de striptease con contacto físico (baile privado), lo cual infringe la regla de no contenido sexual o desnudos.; El video muestra diálogos y una escena de interacción con trabajadores que contiene insultos y lenguaje vulgar en los subtítulos/gameplay.; Se incluye un dato no presente en el material: el valor de 14 mil millones de dólares para el imperio de Rockstar.; Se incluye un dato no presente en el material: la broma del jefe de Take-Two sobre GTA 7."
+    ]
   }
 ]
