@@ -510,5 +510,22 @@
       "clip: Ningún clip pasó la revisión hoy.",
       "novedad: El revisor rechazó la novedad: El video utiliza imágenes de contenido sexual sugerente (personaje en la ducha y escena de masajes con ropa interior mínima) que incumplen la regla de evitar desnudos o contenido no apto.; El texto del video y el caption mencionan que el juego ya salió ('en su primer día de vida', 'ya tienes el juego', 'ya compraste tu copia'), lo cual es falso según el material proporcionado que sitúa las noticias en el futuro (noviembre de 2026) y presenta el éxito como un hecho, mientras que las reglas prohíben presentar rumores o datos no confirmados como hechos actuales.; Los subtítulos en los fotogramas presentan errores de superposición (ej. 'LOS LO MÁS ALTOS EN') y de sincronización con lo que se dice.; El caption utiliza un modismo ('plata' se evita en neutro, aunque aquí no se usó, se prefiere evitar preguntas que asuman que el juego ya salió cuando no es así)."
     ]
+  },
+  {
+    "fecha": "2026-11-22",
+    "turno": 2,
+    "tipo": "clip",
+    "titulo": "¡Estuvo a nada de chocar contra el autobús! #GTA6",
+    "clip": "https://www.twitch.tv/roier/clip/FantasticCrypticWerewolfDoritosChip-g-3kZNA4rdH8gcsH",
+    "streamer": "Roier",
+    "links": [],
+    "resultados": {
+      "youtube": "AGyucmNGvNY",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "13:29",
+    "run": 45042991028
   }
 ]
