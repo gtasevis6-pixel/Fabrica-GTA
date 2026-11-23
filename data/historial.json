@@ -644,5 +644,21 @@
     "otro_idioma": false,
     "hora": "23:01",
     "run": 45097038497
+  },
+  {
+    "fecha": "2026-11-22",
+    "turno": 10,
+    "tipo": "clip",
+    "titulo": "La reacción de una NPC en GTA 6 que nadie esperaba",
+    "clip": "https://www.twitch.tv/rubius/clip/BlatantTenderIcecreamUWot-NDulaXJlbR9f2ztu",
+    "streamer": "Rubius",
+    "links": [],
+    "resultados": {
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "01:09",
+    "run": 45109168265
   }
 ]
