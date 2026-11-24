@@ -861,5 +861,15 @@
     "otro_idioma": false,
     "hora": "17:10",
     "run": 45476037323
+  },
+  {
+    "fecha": "2026-11-24",
+    "turno": 4,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "novedad: El revisor rechazó la novedad: El audio/script inventa datos que no están en el material provisto (menciona 44 millones de copias vendidas y 4 mil millones de dólares recaudados, cifras inexistentes en los artículos).",
+      "clip: Ningún clip pasó la revisión hoy."
+    ]
   }
 ]
