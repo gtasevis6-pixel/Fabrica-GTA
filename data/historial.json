@@ -882,5 +882,22 @@
       "clip: Ningún clip pasó la revisión hoy.",
       "novedad: El revisor rechazó la novedad: Invento de datos no presentes en el material: el material no menciona '44.9 millones de copias', 'cuatro mil millones de dólares' ni la pérdida de jugadores en 'Call of Duty'.; El caption y el guion presentan rumores o datos externos no verificados por el material como hechos oficiales.; Uso de modismos locales: 'ya sos uno de los millones' (voseo)."
     ]
+  },
+  {
+    "fecha": "2026-11-24",
+    "turno": 5,
+    "tipo": "clip",
+    "titulo": "DjMaRiiO muestra su progreso en GTA 6",
+    "clip": "https://www.twitch.tv/djmariio/clip/SoftProtectiveSandpiperFutureMan-7FFb9Ms8_tRcCGN4",
+    "streamer": "DjMaRiiO",
+    "links": [],
+    "resultados": {
+      "youtube": "C3SLsEduqqM",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "20:09",
+    "run": 45505388319
   }
 ]
