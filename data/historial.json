@@ -871,5 +871,16 @@
       "novedad: El revisor rechazó la novedad: El audio/script inventa datos que no están en el material provisto (menciona 44 millones de copias vendidas y 4 mil millones de dólares recaudados, cifras inexistentes en los artículos).",
       "clip: Ningún clip pasó la revisión hoy."
     ]
+  },
+  {
+    "fecha": "2026-11-24",
+    "turno": 5,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "guia: El revisor rechazó la novedad: El material no menciona ninguna misión llamada '¡Oye, Arnold!' ni a un personaje llamado Arnold. Está prohibido inventar datos o nombres que no figuren en el material.",
+      "clip: Ningún clip pasó la revisión hoy.",
+      "novedad: El revisor rechazó la novedad: Invento de datos no presentes en el material: el material no menciona '44.9 millones de copias', 'cuatro mil millones de dólares' ni la pérdida de jugadores en 'Call of Duty'.; El caption y el guion presentan rumores o datos externos no verificados por el material como hechos oficiales.; Uso de modismos locales: 'ya sos uno de los millones' (voseo)."
+    ]
   }
 ]
