@@ -1009,5 +1009,22 @@
     "otro_idioma": false,
     "hora": "14:15",
     "run": 45660413915
+  },
+  {
+    "fecha": "2026-11-25",
+    "turno": 3,
+    "tipo": "clip",
+    "titulo": "Cuando la física de GTA 6 decide por ti",
+    "clip": "https://www.twitch.tv/xagepa/clip/PlainCheerfulPanOSsloth-oFCxDJZtKtprEadF",
+    "streamer": "Xagepa",
+    "links": [],
+    "resultados": {
+      "youtube": "nG1EYrlGqx8",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "15:15",
+    "run": 45668919877
   }
 ]
