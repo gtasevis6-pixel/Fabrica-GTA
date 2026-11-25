@@ -1026,5 +1026,23 @@
     "otro_idioma": false,
     "hora": "15:15",
     "run": 45668919877
+  },
+  {
+    "fecha": "2026-11-25",
+    "turno": 4,
+    "tipo": "novedad",
+    "titulo": "GTA 6 en PC: Rockstar frena los proyectos no oficiales",
+    "clip": "",
+    "streamer": "",
+    "links": [
+      "https://news.google.com/rss/articles/CBMi5wFBVV95cUxOeS1QWnJlbFFPVFJfY0VTYy0xVW53VDhaY1czcUpFUTM1U1l2UTRXMHVGc3hOYzJNMVlERHV4X210Z0h4RXJiUXY1UVU4SHkzTUplUGdSTUoxMmlvMkx1UFdKeEhsek1WV1AwcVRybmVfSXpfcWExM2otYklzbFo3ZXNNWjBIREE0R0JwQURkeWFwbm1MMXU0WVRYclZPaTQtMzF4djBBQU9kQVJWUnpnTlJoT1pkOWNjMFphSWpVdXI2ZnktR0pEWDUzem9WVVNPd0l3QlF6NHJIaTNBNjkzdmRRbTlMdE3SAewBQVVfeXFMTzktY2RDLW04LV9remJDVkNGTDcwU0JwTDdYbVgyZ19ZNW5ycHRvbzRsclZPLVZxWlRweGEyM1MzbEYxTlRld280ZGNuX1pVVVpSdEdmU2U5VFBXOXNaQ3RkbGxxajBLdmVvaGcxWTVvU1RKU3JjUFE1MVlWeXUwWW50X21pTmsxXzRiQlBWdDYxVHFWQmJNTGgtd3RGLWNUNlY4WGFmNkJJalhVYzUwZl92TVk4VVBQMGU2NDc5SW85eFZLaTRETFhqc0N6cTBidDF1X2E2UVJCSld0MmJkTFVaTm9IVTN1RzdKZVo?oc=5"
+    ],
+    "resultados": {
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "16:00",
+    "run": 45679272332
   }
 ]
