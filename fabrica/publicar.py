@@ -430,6 +430,9 @@ def facebook_reel(video_path, descripcion, titulo=""):
 
 
 def mail(asunto, html):
+    if util.config().get("mails", True) is False:
+        util.log("Mails apagados en config.json (\"mails\": false): no mando", asunto)
+        return False
     usuario, clave = util.secreto("SMTP_USER"), util.secreto("SMTP_PASS")
     if not (usuario and clave):
         util.log("Sin SMTP configurado: no mando mail")
