@@ -2,6 +2,7 @@
   "_ayuda": "Editá este archivo desde GitHub (lápiz → Commit changes). usuario: tu @ en las redes. turnos: a qué hora sale cada video (hora de Argentina) y de qué tipo: clip (el clip más viral del momento), novedad (una noticia con voz en off) o guia (cómo pasar una misión o un desafío, con voz en off; si no hay guía real, sale un clip viral). Podés agregar más turnos copiando una línea. minutos_aprobacion: cuánto espera tu respuesta antes de publicar solo. publicar: poné true en cada red a medida que la conectes.",
   "usuario": "@GTASeVIs",
   "email_aviso": "",
+  "mails": false,
   "_nota_email": "Vacío = te llega al Gmail de SMTP_USER. Si querés otro mail, ponelo acá (ojo: el repo es público y se ve).",
   "automatico": true,
   "_nota_automatico": "false = solo corre cuando vos tocás Run workflow. Poné true cuando la prueba ande bien y quieras los videos de todos los turnos solos.",
