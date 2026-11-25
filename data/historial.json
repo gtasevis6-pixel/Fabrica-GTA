@@ -992,5 +992,22 @@
       "clip: Ningún clip pasó la revisión hoy.",
       "novedad: El revisor rechazó la novedad: El texto menciona datos de ventas y récords (32 millones antes de salir, superó a Fortnite y Call of Duty, récord en PlayStation) que no figuran en el material proporcionado.; El material [6] solo confirma 47 millones en cuatro días y que superó lanzamientos de 2026, pero no menciona lo demás.; El video utiliza imágenes de una misión que parecen ser spoilers visuales de la historia (escena de la bóveda/robo y fotos comprometedoras), lo cual infringe la regla de no mostrar giros o momentos clave de la historia en piezas de novedades.; Las imágenes de la cámara en la portada y el segundo fotograma contienen contenido sugerente que podría rozar la censura de desnudos/sexualidad explícita según las políticas de la plataforma."
     ]
+  },
+  {
+    "fecha": "2026-11-25",
+    "turno": 2,
+    "tipo": "clip",
+    "titulo": "Rubius descubre fotos locas en GTA 6",
+    "clip": "https://www.twitch.tv/rubius/clip/SquarePhilanthropicGarbageOSsloth-Cc0LdBQc6lRbz2B8",
+    "streamer": "Rubius",
+    "links": [],
+    "resultados": {
+      "youtube": "soNKpMt5mx4",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "14:15",
+    "run": 45660413915
   }
 ]
