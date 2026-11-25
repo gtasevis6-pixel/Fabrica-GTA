@@ -981,5 +981,16 @@
     "otro_idioma": false,
     "hora": "09:42",
     "run": 45615034288
+  },
+  {
+    "fecha": "2026-11-25",
+    "turno": 2,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "guia: No hubo noticias ni guías nuevas que valgan la pena.",
+      "clip: Ningún clip pasó la revisión hoy.",
+      "novedad: El revisor rechazó la novedad: El texto menciona datos de ventas y récords (32 millones antes de salir, superó a Fortnite y Call of Duty, récord en PlayStation) que no figuran en el material proporcionado.; El material [6] solo confirma 47 millones en cuatro días y que superó lanzamientos de 2026, pero no menciona lo demás.; El video utiliza imágenes de una misión que parecen ser spoilers visuales de la historia (escena de la bóveda/robo y fotos comprometedoras), lo cual infringe la regla de no mostrar giros o momentos clave de la historia en piezas de novedades.; Las imágenes de la cámara en la portada y el segundo fotograma contienen contenido sugerente que podría rozar la censura de desnudos/sexualidad explícita según las políticas de la plataforma."
+    ]
   }
 ]
