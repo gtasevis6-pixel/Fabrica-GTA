@@ -1160,5 +1160,16 @@
     "otro_idioma": false,
     "hora": "09:51",
     "run": 45820760887
+  },
+  {
+    "fecha": "2026-11-26",
+    "turno": 2,
+    "tipo": "nada",
+    "titulo": "",
+    "errores": [
+      "guia: El revisor rechazó la novedad: El material proporcionado (enlaces a noticias y guías generales) no contiene el dato específico sobre la mecánica de dejar el auto encendido mediante el botón de apuntar.; El video muestra imágenes de streamers (IlloJuan, Rubius, Speed) que parecen ser de clips virales o montajes, lo cual contradice la regla de no usar filtraciones o contenido no confirmado oficialmente por Rockstar Games.; Se presentan mecánicas de juego como hechos confirmados ('En GTA 6 por defecto se apaga el motor') sin que esta información esté presente en el material de referencia.",
+      "clip: Ningún clip pasó la revisión hoy.",
+      "novedad: El revisor rechazó la novedad: La información presentada en el video, el gancho y el título no figura en el MATERIAL proporcionado.; El MATERIAL no menciona que GTA 6 haya salido a la venta, ni que haya roto récords en PlayStation, ni que existan accionistas insatisfechos con sus ventas.; El video presenta como un hecho oficial que el juego ya se estrenó y rompió récords, lo cual contradice la regla de no inventar datos ni fechas.; El uso de clips de streamers jugando (IlloJuan, Rubius) da a entender que el juego ya salió, lo cual es falso según el material oficial disponible."
+    ]
   }
 ]
