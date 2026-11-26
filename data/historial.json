@@ -1111,5 +1111,22 @@
     "otro_idioma": false,
     "hora": "23:31",
     "run": 45741926943
+  },
+  {
+    "fecha": "2026-11-25",
+    "turno": 9,
+    "tipo": "clip",
+    "titulo": "Robando un auto de lujo en GTA 6 y la reacción del streamer",
+    "clip": "https://www.twitch.tv/tminnzy/clip/HardVictoriousPeafowlTwitchRPG-j8Q8j8GsgrudaSJH",
+    "streamer": "Tminnzy",
+    "links": [],
+    "resultados": {
+      "youtube": "PrdNZsDEKfI",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": true,
+    "hora": "00:41",
+    "run": 45749565595
   }
 ]
