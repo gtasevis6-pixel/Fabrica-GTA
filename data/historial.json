@@ -1290,5 +1290,22 @@
     "otro_idioma": false,
     "hora": "21:02",
     "run": 45913579328
+  },
+  {
+    "fecha": "2026-11-26",
+    "turno": 9,
+    "tipo": "clip",
+    "titulo": "La locura que le pasó a IlloJuan jugando GTA",
+    "clip": "https://www.twitch.tv/illojuan/clip/ConcernedFuriousOkapiRedCoat-RqZyCRo--PIgibPp",
+    "streamer": "IlloJuan",
+    "links": [],
+    "resultados": {
+      "youtube": "K8bVQ9zxz9I",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "22:20",
+    "run": 45921221591
   }
 ]
