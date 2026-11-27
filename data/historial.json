@@ -1339,5 +1339,22 @@
     "otro_idioma": false,
     "hora": "09:04",
     "run": 45994489451
+  },
+  {
+    "fecha": "2026-11-27",
+    "turno": 2,
+    "tipo": "clip",
+    "titulo": "La mentira de Jason que sorprendió a Rubius en GTA 6",
+    "clip": "https://www.twitch.tv/rubius/clip/AgitatedStupidKleeFutureMan-PNIi0RUPNLiC179R",
+    "streamer": "Rubius",
+    "links": [],
+    "resultados": {
+      "youtube": "AUoP2G4xunQ",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "12:38",
+    "run": 46025480681
   }
 ]
