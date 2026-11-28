@@ -1509,5 +1509,24 @@
     "otro_idioma": false,
     "hora": "09:28",
     "run": 46144136060
+  },
+  {
+    "fecha": "2026-11-28",
+    "turno": 2,
+    "tipo": "guia",
+    "titulo": "GTA 6: guia para empezar (lo que nadie te dice)",
+    "clip": "",
+    "streamer": "",
+    "links": [
+      "https://news.google.com/rss/articles/CBMiZkFVX3lxTE5TeW8wd1pKQ1FVZFZIQ1pEakhVdEFiNzVpY2tzcWRFQjhnT1JaaGsta2tsUF9ORDR0MzBvMlc0VGVRc2lMb1lIVmE5YUZJa2dIWHllbkNqX1NDT2NyaXx2MU82NjFvZw?oc=5"
+    ],
+    "resultados": {
+      "youtube": "L-YfegYvLIM",
+      "instagram_reel": "ERROR: Instagram (vía página de Facebook): Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)",
+      "facebook": "ERROR: Facebook no abrió la subida: Any of the pages_read_engagement, pages_manage_metadata,\n        pages_read_user_content, pages_manage_ads, pages_show_list or\n        pages_messaging permission(s) must be granted before impersonating a\n        user's page. (código 190, OAuthException)"
+    },
+    "otro_idioma": false,
+    "hora": "11:55",
+    "run": 46156433684
   }
 ]
